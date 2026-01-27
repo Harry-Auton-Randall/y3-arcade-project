@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 public class boatMove : MonoBehaviour
 {
-    public PlayerInput pi;
+    //public PlayerInput pi;
     Rigidbody rb;
     float speed;
     float rotate;
@@ -20,7 +20,9 @@ public class boatMove : MonoBehaviour
 
     void Start()
     {
-
+        //overrides inertiaTensor and inertiaTensorRotation of the rigidbody, otherwise rotation slightly affects the x and z axes
+        rb.inertiaTensor = new Vector3(1.0f, 1.0f, 1.0f);
+        rb.inertiaTensorRotation = Quaternion.Euler(Vector3.zero);
     }
 
     public void SetStats(float speed1, float rotate1)
@@ -28,25 +30,24 @@ public class boatMove : MonoBehaviour
         speed = speed1;
         rotate = rotate1;
     }
-    void OnMovement(InputValue value)
+
+    public void SetMovementIn(float value)
     {
-        movementIn = value.Get<float>();
+        movementIn = value;
         if (movementIn < 0)
         {
             movementIn = movementIn / 3.0f;
         }
     }
-    void OnRotation(InputValue value)
+    public void SetRotationIn(float value)
     {
-        rotationIn = value.Get<float>();
+        rotationIn = value;
     }
 
     void FixedUpdate()
     {
-        rb.AddRelativeForce(0, 0, rb.mass * speed * 0.5f * movementIn);
-        rb.AddTorque(Vector3.up * rb.inertiaTensor.y * rotate * Mathf.Deg2Rad * 0.5f * rotationIn);
-        //no need to worry about tweaking inertiaTensorRotation bc the boat's rotation is locked on the x and z axes
-        //Solutions if i need to unlock rotation: 1. override inertiaTensor and inertiaTensorRotation in Start, 2. get chatgpt to make code that un-adjusts the tensor for the rotation
+        rb.AddRelativeForce(0, 0, rb.mass * speed * rb.linearDamping * movementIn);
+        rb.AddTorque(Vector3.up * rb.inertiaTensor.y * rotate * Mathf.Deg2Rad * rb.angularDamping * rotationIn);
 
         outp = rb.angularVelocity.y * Mathf.Rad2Deg;
     }
