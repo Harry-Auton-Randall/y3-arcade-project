@@ -1,17 +1,17 @@
 using UnityEngine;
 
-public class oceanMaterialSwapper : MonoBehaviour
+public class oceanAnimator : MonoBehaviour
 {
     MeshRenderer mr;
     Material material;
 
-    public Texture[] textures;
+    public Texture[] textures; //array of normal textures
 
-    public float timeLoop;
-    public float sineVal;
-    public float normalV0, normalV1, normalVAlt;
+    float timeLoop, sineVal; //for making the math wave
+    float normalV0, normalV1, normalVAlt, valtMult; //the values the normals move by
+    public float waveHeight, waveRate; //tweakable multipliers
 
-    public int normalS0, normalS1, normalM0, normalM1;
+    int normalS0, normalS1, normalM0, normalM1; //IDs
 
     public int currentTex;
     bool MainsTurn;
@@ -30,13 +30,17 @@ public class oceanMaterialSwapper : MonoBehaviour
         timeLoop = 0;
         sineVal = 0;
 
+        valtMult = 0.23f;
+        waveHeight = 0.5f;
+        waveRate = 0.4f;
+
         currentTex = 0;
     }
 
     void PickTexture()
     {
         currentTex = currentTex + 1;
-        if (currentTex > 7)
+        if (currentTex > textures.Length - 1)
         {
             currentTex = 0;
         }
@@ -44,8 +48,8 @@ public class oceanMaterialSwapper : MonoBehaviour
 
     void Update()
     {
-        //make wave wave based off time
-        timeLoop = timeLoop + (Time.deltaTime / 5);
+        //make math wave based off time
+        timeLoop = timeLoop + (Time.deltaTime * waveRate * 0.5f);
         while (timeLoop >= 1)
         {
             timeLoop = timeLoop - 1;
@@ -57,11 +61,11 @@ public class oceanMaterialSwapper : MonoBehaviour
         //calculate normal scale value for each map
         //VAlt gives a slight boost to scale as it gets closer to 0.5
 
-        //normalVAlt = 0.1f * (1 - (2 * Mathf.Abs(sineVal - 0.5f))); //triangle wave
-        normalVAlt = 0.1f * Mathf.Abs(Mathf.Cos(0.5f * ((360 * Mathf.Deg2Rad * sineVal) - 180 * Mathf.Deg2Rad))); //absoluted sine wave
+        //normalVAlt = valtMult * waveHeight * (1 - (2 * Mathf.Abs(sineVal - 0.5f))); //triangle wave
+        normalVAlt = valtMult * waveHeight * Mathf.Abs(Mathf.Cos(0.5f * ((360 * Mathf.Deg2Rad * sineVal) - 180 * Mathf.Deg2Rad))); //absoluted sine wave
 
-        normalV0 = (sineVal * 0.5f) + normalVAlt;
-        normalV1 = ((1 - sineVal) * 0.5f) + normalVAlt;
+        normalV0 = (sineVal * waveHeight) + normalVAlt;
+        normalV1 = ((1 - sineVal) * waveHeight) + normalVAlt;
 
         //-----------------------
 

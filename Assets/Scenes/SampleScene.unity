@@ -911,6 +911,8 @@ MonoBehaviour:
   normalV0: 0
   normalV1: 0
   normalVAlt: 0
+  valtMult: 0
+  waveHeight: 0
   normalS0: 0
   normalS1: 0
   normalM0: 0
