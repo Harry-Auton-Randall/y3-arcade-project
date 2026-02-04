@@ -48,6 +48,9 @@ public class boatControlPlayer : MonoBehaviour
 
     void Update()
     {
+        //Runs CamControl's main stuff
+        cc.CamControlUpdate();
+
         //Gets where the mouse is on the ocean, and moves the reticle to it. Works for pers and orth
         ray = cc.cam.ScreenPointToRay(cc.mousePositionClamp);
         //Debug.DrawRay(ray.origin, ray.direction * 1000, Color.yellow);

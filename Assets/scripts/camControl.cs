@@ -39,7 +39,7 @@ public class camControl : MonoBehaviour
         cameraRotY = cameraRotY - 90;
     }
 
-    void Update()
+    public void CamControlUpdate()
     {
         //TEMPORARY: adjusts camera based on settings
         cam.orthographic = cameraOrth;
