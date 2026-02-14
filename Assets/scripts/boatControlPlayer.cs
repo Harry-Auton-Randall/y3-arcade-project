@@ -58,5 +58,6 @@ public class boatControlPlayer : MonoBehaviour
         {
             reticle.transform.position = hit.point;
         }
+        reticle.transform.rotation = Quaternion.identity;
     }
 }
