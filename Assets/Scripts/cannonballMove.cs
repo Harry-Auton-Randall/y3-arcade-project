@@ -1,0 +1,87 @@
+using UnityEngine;
+
+public class cannonballMove : MonoBehaviour
+{
+    public float speed = 40f;
+    public float duration = 0.75f;
+    public float startHeight = 0.73f;
+    
+    bool friendly = false;
+    bool chain, fire, pierce;
+
+    float tss;
+    Vector3 ballHeight = new Vector3(0f,0f,0f);
+    Vector3 outlineSize = new Vector3(0f, 0f, 0f);
+
+    public Material redSolid, whiteSolid;
+    Transform ball, outline;
+
+    void Awake()
+    {
+        tss = 0f;
+        ball = transform.Find("ball");
+        outline = transform.Find("ball/outline");
+    }
+
+    //With ammo type
+    public void Init(float speedIn, float durationIn, float startHeightIn, bool friendlyIn, int typeIn)
+    {
+        speed = speedIn;
+        duration = durationIn;
+        startHeight = startHeightIn;
+        friendly = friendlyIn;
+        if (friendly)
+        {
+            outline.GetComponent<Renderer>().material = whiteSolid;
+        }
+        else
+        {
+            outline.GetComponent<Renderer>().material = redSolid;
+        }
+
+        chain = false;
+        fire = false;
+        pierce = false;
+        switch (typeIn)
+        {
+            case 1:
+                chain = true;
+                break;
+            case 2:
+                fire = true;
+                break;
+            case 3:
+                pierce = true;
+                break;
+        }
+        outline.localScale = Vector3.zero;
+        ballHeight.y = startHeightIn;
+        ball.localPosition = ballHeight;
+    }
+
+    void FixedUpdate()
+    {
+        tss += Time.fixedDeltaTime;
+        if (tss > duration)
+        {
+            Destroy(this.gameObject);
+        }
+
+        transform.position += transform.forward * speed * Time.fixedDeltaTime;
+
+        ballHeight.y = (0.02f + (startHeight - 0.02f) * (1 - Mathf.Pow(tss / duration, 2)));
+        ball.localPosition = ballHeight;
+
+        if (tss * speed >= 1.5f)
+        {
+            outlineSize.x = (10f / 3f);
+        }
+        else
+        {
+            outlineSize.x = ((tss * speed) / 1.5f) * (10f / 3f);
+        }
+        outlineSize.y = outlineSize.x;
+        outlineSize.z = outlineSize.x;
+        outline.localScale = outlineSize;
+    }
+}

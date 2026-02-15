@@ -17,10 +17,13 @@ public class boatControlPlayer : MonoBehaviour
     float rotation;
     boatMove bm;
 
+    boatCombat bc;
+
     void Awake()
     {
         bm = GetComponent<boatMove>();
         cc = GetComponent<camControl>();
+        bc = GetComponent<boatCombat>();
 
         zeroPlane = GameObject.Find("ocean").GetComponent<MeshCollider>();
         reticle = transform.Find("reticle");
@@ -57,7 +60,9 @@ public class boatControlPlayer : MonoBehaviour
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, oceanLayer))
         {
             reticle.transform.position = hit.point;
+            bc.aimPos.x = reticle.transform.localPosition.x;
+            bc.aimPos.y = reticle.transform.localPosition.z;
         }
-        reticle.transform.rotation = Quaternion.identity;
+        reticle.transform.rotation = Quaternion.Euler(0,cc.cameraRotYGrad,0);
     }
 }

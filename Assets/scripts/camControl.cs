@@ -14,7 +14,7 @@ public class camControl : MonoBehaviour
     public bool cameraOrth = false;
     public bool cameraTilt = true;
     public int cameraRotY = 0;
-    float cameraRotYGrad;
+    public float cameraRotYGrad;
     float camRotVel;
 
     void Awake()
