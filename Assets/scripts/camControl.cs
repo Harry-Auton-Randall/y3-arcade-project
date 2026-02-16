@@ -30,15 +30,6 @@ public class camControl : MonoBehaviour
         camPosition = camMove.localPosition;
     }
 
-    void OnCamRotCW()
-    {
-        cameraRotY = cameraRotY + 90;
-    }
-    void OnCamRotCCW()
-    {
-        cameraRotY = cameraRotY - 90;
-    }
-
     public void CamControlUpdate()
     {
         //TEMPORARY: adjusts camera based on settings

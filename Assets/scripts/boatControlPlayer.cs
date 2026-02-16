@@ -8,14 +8,18 @@ public class boatControlPlayer : MonoBehaviour
     MeshCollider zeroPlane;
     Transform reticle;
     RaycastHit hit;
-    LayerMask oceanLayer;
+    public LayerMask oceanLayer;
     Ray ray;
     camControl cc;
 
     //Boat movement stuff
-    float movement;
-    float rotation;
+    //float movement;
+    //float rotation;
     boatMove bm;
+
+    //Input system stuff
+    InputActionMap mainActions;
+    InputAction movementA, rotationA, camRotCWA, camRotCCWA, shootA;
 
     boatCombat bc;
 
@@ -28,6 +32,13 @@ public class boatControlPlayer : MonoBehaviour
         zeroPlane = GameObject.Find("ocean").GetComponent<MeshCollider>();
         reticle = transform.Find("reticle");
 
+        mainActions = InputSystem.actions.FindActionMap("Main");
+        movementA = mainActions.FindAction("Movement");
+        rotationA = mainActions.FindAction("Rotation");
+        camRotCWA = mainActions.FindAction("CamRotCW");
+        camRotCCWA = mainActions.FindAction("CamRotCCW");
+        shootA = mainActions.FindAction("Shoot");
+
         oceanLayer |= (1 << 6);
 
     }
@@ -35,24 +46,43 @@ public class boatControlPlayer : MonoBehaviour
     {
         
     }
-    void OnMovement(InputValue value)
+
+    void OnEnable()
     {
-        movement = value.Get<float>();
-        bm.SetMovementIn(movement);
-
+        mainActions.Enable();
+        camRotCWA.performed += OnCamRotCW;
+        camRotCCWA.performed += OnCamRotCCW;
+        shootA.performed += OnShoot;
     }
-    void OnRotation(InputValue value)
+    void OnDisable()
     {
-        rotation = value.Get<float>();
-        bm.SetRotationIn(rotation);
+        mainActions.Enable();
+        camRotCWA.performed -= OnCamRotCW;
+        camRotCCWA.performed -= OnCamRotCCW;
+        shootA.performed -= OnShoot;
     }
 
-
+    void OnCamRotCW(InputAction.CallbackContext context)
+    {
+        cc.cameraRotY += 90;
+    }
+    void OnCamRotCCW(InputAction.CallbackContext context)
+    {
+        cc.cameraRotY -= 90;
+    }
+    void OnShoot(InputAction.CallbackContext context)
+    {
+        bc.Shoot();
+    }
 
     void Update()
     {
         //Runs CamControl's main stuff
         cc.CamControlUpdate();
+
+        //Movement stuff
+        bm.SetMovementIn(movementA.ReadValue<float>());
+        bm.SetRotationIn(rotationA.ReadValue<float>());
 
         //Gets where the mouse is on the ocean, and moves the reticle to it. Works for pers and orth
         ray = cc.cam.ScreenPointToRay(cc.mousePositionClamp);

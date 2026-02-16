@@ -37,6 +37,10 @@ public class boatCombat : MonoBehaviour
     Vector2 cannonCentreL = Vector2.zero;
     Vector2 cannonCentreR = Vector2.zero;
 
+    Renderer cannonRangeL, cannonRangeR, cannonRangeL2, cannonRangeR2;//Cutter uses cannonRangeR, Brigantine uses all 4
+    Transform cannonRangeTipL, cannonRangeTipR;//for Frigates and Galleons
+    bool goodAimL, goodAimR;
+
     boatMove bm;
 
     void Awake()
@@ -56,6 +60,8 @@ public class boatCombat : MonoBehaviour
                 cannonsR = new GameObject[] { transform.Find("cannon").gameObject };
                 cannonCentreR.x = cannonsR[0].transform.localPosition.x;
                 cannonCentreR.y = cannonsR[0].transform.localPosition.z;
+                cannonRangeR = cannonsR[0].transform.Find("range").GetComponent<Renderer>();
+
                 break;
 
             case Classes.Brigantine:
@@ -110,14 +116,39 @@ public class boatCombat : MonoBehaviour
 
     void Update()
     {
-        //Make cutter's cannon point towards reticle if it can - need to put in a switch statement when more classes added
-        if((aimPos.y - cannonCentreR.y < -1 * (aimPos.x - cannonCentreR.x)) && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x))
+        if (shipClass == Classes.Cutter)
         {
-            cannonsR[0].transform.localRotation = Quaternion.Euler(0, Mathf.Atan2(aimPos.x - cannonCentreR.x, aimPos.y - cannonCentreR.y) * Mathf.Rad2Deg, 0);
+            if ((aimPos.y - cannonCentreR.y < -1 * (aimPos.x - cannonCentreR.x)) && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x))
+            {
+                cannonRangeR.enabled = true;
+                goodAimR = true;
+                cannonsR[0].transform.localRotation = Quaternion.Euler(0, Mathf.Atan2(aimPos.x - cannonCentreR.x, aimPos.y - cannonCentreR.y) * Mathf.Rad2Deg, 0);
+            }
+            else
+            {
+                cannonRangeR.enabled = false;
+                goodAimR = false;
+                cannonsR[0].transform.localRotation = Quaternion.Euler(0, 180, 0);
+            }
         }
-        else
+    }
+    public void Shoot()
+    {
+        if (shipClass == Classes.Cutter)
         {
-            cannonsR[0].transform.localRotation = Quaternion.Euler(0, 180, 0);
+            if (goodAimR)
+            {
+                //if(isPlayer || (team == playerTeam && team != 0))
+                if (isPlayer)
+                {
+                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, true, 0);
+                }
+                else
+                {
+                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, false, 0);
+                }
+                
+            }
         }
     }
 }
