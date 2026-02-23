@@ -102,6 +102,7 @@ GameObject:
   - component: {fileID: 7948017862013537884}
   - component: {fileID: 4157886616762055836}
   - component: {fileID: 4501892810008326677}
+  - component: {fileID: 6750864772088259152}
   m_Layer: 0
   m_Name: cannonball
   m_TagString: Untagged
@@ -163,6 +164,33 @@ MonoBehaviour:
   startHeight: 0.73
   redSolid: {fileID: 2100000, guid: 6e8b2b4acfe945d41914e46cb61e9a28, type: 2}
   whiteSolid: {fileID: 2100000, guid: 2baf41d097d1dbf4c878a46decde18c1, type: 2}
+--- !u!54 &6750864772088259152
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8758017483449408798}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 0
+  m_ImplicitTensor: 0
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 84
+  m_CollisionDetection: 1
 --- !u!1001 &4296906633439968209
 PrefabInstance:
   m_ObjectHideFlags: 0

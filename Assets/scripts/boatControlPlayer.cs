@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 //a
 public class boatControlPlayer : MonoBehaviour
@@ -11,6 +12,7 @@ public class boatControlPlayer : MonoBehaviour
     public LayerMask oceanLayer;
     Ray ray;
     camControl cc;
+    Slider reticleCircle;
 
     //Boat movement stuff
     //float movement;
@@ -31,6 +33,7 @@ public class boatControlPlayer : MonoBehaviour
 
         zeroPlane = GameObject.Find("ocean").GetComponent<MeshCollider>();
         reticle = transform.Find("reticle");
+        reticleCircle = transform.Find("reticle/reticleCanvas/Slider").GetComponent<Slider>();
 
         mainActions = InputSystem.actions.FindActionMap("Main");
         movementA = mainActions.FindAction("Movement");
@@ -94,5 +97,7 @@ public class boatControlPlayer : MonoBehaviour
             bc.aimPos.y = reticle.transform.localPosition.z;
         }
         reticle.transform.rotation = Quaternion.Euler(0,cc.cameraRotYGrad,0);
+        reticleCircle.value = bc.reloadProgress;
+
     }
 }

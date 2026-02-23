@@ -9,6 +9,8 @@ public class cannonballMove : MonoBehaviour
     bool friendly = false;
     bool chain, fire, pierce;
 
+    Collider ignore;
+
     float tss;
     Vector3 ballHeight = new Vector3(0f,0f,0f);
     Vector3 outlineSize = new Vector3(0f, 0f, 0f);
@@ -24,12 +26,13 @@ public class cannonballMove : MonoBehaviour
     }
 
     //With ammo type
-    public void Init(float speedIn, float durationIn, float startHeightIn, bool friendlyIn, int typeIn)
+    public void Init(float speedIn, float durationIn, float startHeightIn, bool friendlyIn, int typeIn, Collider ignoreIn)
     {
         speed = speedIn;
         duration = durationIn;
         startHeight = startHeightIn;
         friendly = friendlyIn;
+        ignore = ignoreIn;
         if (friendly)
         {
             outline.GetComponent<Renderer>().material = whiteSolid;
@@ -57,6 +60,28 @@ public class cannonballMove : MonoBehaviour
         outline.localScale = Vector3.zero;
         ballHeight.y = startHeightIn;
         ball.localPosition = ballHeight;
+    }
+
+    void OnTriggerEnter(Collider collision)
+    {
+        //Ignores the boat that shot it, and rams
+        if ((collision != ignore) && !(collision.CompareTag("Ram")))
+        {
+            //boat hit
+            if (collision.gameObject.layer == 7)
+            {
+                //call health-lowering function in boatCombat
+                if (!pierce)
+                {
+                    Destroy(this.gameObject);
+                }
+            }
+            //terrain hit
+            else
+            {
+                Destroy(this.gameObject);
+            }
+        }
     }
 
     void FixedUpdate()

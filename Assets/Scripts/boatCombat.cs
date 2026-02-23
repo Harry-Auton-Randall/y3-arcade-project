@@ -13,8 +13,8 @@ public class boatCombat : MonoBehaviour
     public float speed;
     public float rotate;
     public int maxHealth;
-    public float maxReload;
-    public float maxReloadSpecial;
+    float maxReload;
+    float maxReloadSpecial;
 
     //inventory
     public int maxWood;
@@ -28,9 +28,12 @@ public class boatCombat : MonoBehaviour
 
     //current variables
     int health;
-    float reloadL, reloadR;
-    float reloadSpecial;
+    public float reloadL, reloadR;
+    public float reloadSpecial;
     public Vector2 aimPos;
+
+    //reticle
+    public float reloadProgress;
 
     //cannons
     GameObject[] cannonsL, cannonsR;
@@ -41,6 +44,8 @@ public class boatCombat : MonoBehaviour
     public Material cannonRangeMat, cannonRangeMatEmpty;
     Transform cannonRangeTipL, cannonRangeTipR;//for Frigates and Galleons
     bool goodAimL, goodAimR;
+
+    Collider hullCollider;
 
     boatMove bm;
 
@@ -111,6 +116,8 @@ public class boatCombat : MonoBehaviour
         reloadR = maxReload;
         reloadSpecial = maxReloadSpecial;
 
+        hullCollider = transform.Find("hull").GetComponent<Collider>();
+
         SetTeamStuff(team); //TEMPORARY - base team stuff off of scene-specified settings, need to change eventually
     }
 
@@ -177,12 +184,14 @@ public class boatCombat : MonoBehaviour
                 cannonRangeR.enabled = true;
                 goodAimR = true;
                 cannonsR[0].transform.localRotation = Quaternion.Euler(0, Mathf.Atan2(aimPos.x - cannonCentreR.x, aimPos.y - cannonCentreR.y) * Mathf.Rad2Deg, 0);
+                reloadProgress = 100 * (reloadR / maxReload);
             }
             else
             {
                 cannonRangeR.enabled = false;
                 goodAimR = false;
                 cannonsR[0].transform.localRotation = Quaternion.Euler(0, 180, 0);
+                reloadProgress = 0;
             }
         }
 
@@ -216,11 +225,11 @@ public class boatCombat : MonoBehaviour
                 //if(isPlayer || (team == playerTeam && team != 0))
                 if (isPlayer)
                 {
-                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, true, 0);
+                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, true, 0, hullCollider);
                 }
                 else
                 {
-                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, false, 0);
+                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, false, 0, hullCollider);
                 }
                 reloadR = 0;
             }
