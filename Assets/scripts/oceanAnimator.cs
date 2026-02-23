@@ -9,7 +9,7 @@ public class oceanAnimator : MonoBehaviour
 
     float timeLoop, sineVal; //for making the math wave
     float normalV0, normalV1, normalVAlt, valtMult; //the values the normals move by
-    public float waveHeight, waveRate; //tweakable multipliers
+    float waveHeight, waveRate; //tweakable multipliers
 
     int normalS0, normalS1, normalM0, normalM1; //IDs
 
@@ -31,7 +31,7 @@ public class oceanAnimator : MonoBehaviour
         sineVal = 0;
 
         valtMult = 0.23f;
-        waveHeight = 0.5f;
+        waveHeight = 0.4f;
         waveRate = 0.4f;
 
         currentTex = 0;

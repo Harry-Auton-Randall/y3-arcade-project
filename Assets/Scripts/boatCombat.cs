@@ -38,6 +38,7 @@ public class boatCombat : MonoBehaviour
     Vector2 cannonCentreR = Vector2.zero;
 
     Renderer cannonRangeL, cannonRangeR, cannonRangeL2, cannonRangeR2;//Cutter uses cannonRangeR, Brigantine uses all 4
+    public Material cannonRangeMat, cannonRangeMatEmpty;
     Transform cannonRangeTipL, cannonRangeTipR;//for Frigates and Galleons
     bool goodAimL, goodAimR;
 
@@ -74,6 +75,7 @@ public class boatCombat : MonoBehaviour
                 //set cannons here
                 cannonCentreL = Vector3.zero;
                 cannonCentreR = Vector3.zero;
+                //set cannon ranges here
                 break;
 
             case Classes.Frigate:
@@ -85,6 +87,7 @@ public class boatCombat : MonoBehaviour
 
                 //set cannons here
                 //set cannon centres here
+                //set cannon ranges here
                 break;
 
             case Classes.Galleon:
@@ -96,6 +99,7 @@ public class boatCombat : MonoBehaviour
 
                 //set cannons here
                 //set cannon centres here
+                //set cannon ranges here
                 break;
         }
 
@@ -106,6 +110,24 @@ public class boatCombat : MonoBehaviour
         reloadL = maxReload;
         reloadR = maxReload;
         reloadSpecial = maxReloadSpecial;
+
+        SetTeamStuff(team); //TEMPORARY - base team stuff off of scene-specified settings, need to change eventually
+    }
+
+    public void SetTeamStuff(int teamIn)
+    {
+        team = teamIn;
+        //if(isPlayer || (team == playerTeam && team != 0))
+        if (isPlayer)
+        {
+            cannonRangeMat = Resources.Load("SolidMaterials/white30", typeof(Material)) as Material;
+            cannonRangeMatEmpty = Resources.Load("SolidMaterials/white5", typeof(Material)) as Material;
+        }
+        else
+        {
+            cannonRangeMat = Resources.Load("SolidMaterials/red60", typeof(Material)) as Material;
+            cannonRangeMatEmpty = Resources.Load("SolidMaterials/red10", typeof(Material)) as Material;
+        }
     }
 
     //speed and rotate initialised in this script and written to boatMove, so each ship can use the same boatMove script
@@ -116,6 +138,38 @@ public class boatCombat : MonoBehaviour
 
     void Update()
     {
+        //Increase reload values
+        if (shipClass != Classes.Cutter)
+        {
+            if (reloadL < maxReload)
+            {
+                reloadL += Time.deltaTime;
+            }
+            if (reloadL > maxReload)
+            {
+                reloadL = maxReload;
+            }
+        }
+
+        if (reloadR < maxReload)
+        {
+            reloadR += Time.deltaTime;
+        }
+        if (reloadR > maxReload)
+        {
+            reloadR = maxReload;
+        }
+
+        if (reloadSpecial < maxReloadSpecial)
+        {
+            reloadSpecial += Time.deltaTime;
+        }
+        if (reloadSpecial > maxReloadSpecial)
+        {
+            reloadSpecial = Time.deltaTime;
+        }
+
+        //Sort out valid cannon aiming
         if (shipClass == Classes.Cutter)
         {
             if ((aimPos.y - cannonCentreR.y < -1 * (aimPos.x - cannonCentreR.x)) && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x))
@@ -131,12 +185,33 @@ public class boatCombat : MonoBehaviour
                 cannonsR[0].transform.localRotation = Quaternion.Euler(0, 180, 0);
             }
         }
+
+        //sort out cannon range colours
+        if (shipClass != Classes.Cutter)
+        {
+            //cannonRangeL
+        }
+        if (shipClass == Classes.Brigantine)
+        {
+            //cannonRangeL2 and R2
+        }
+        //cannonRangeR
+        if (reloadR >= maxReload)
+        {
+            cannonRangeR.material = cannonRangeMat;
+        }
+        else
+        {
+            cannonRangeR.material = cannonRangeMatEmpty;
+        }
+
+
     }
     public void Shoot()
     {
         if (shipClass == Classes.Cutter)
         {
-            if (goodAimR)
+            if (goodAimR && (reloadR >= maxReload))
             {
                 //if(isPlayer || (team == playerTeam && team != 0))
                 if (isPlayer)
@@ -147,7 +222,7 @@ public class boatCombat : MonoBehaviour
                 {
                     cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, false, 0);
                 }
-                
+                reloadR = 0;
             }
         }
     }

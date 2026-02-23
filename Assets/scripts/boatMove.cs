@@ -10,7 +10,7 @@ public class boatMove : MonoBehaviour
     float movementIn;
     float rotationIn;
 
-    public float outp;
+    public float outSpd, outGlbSpd, outRotSpd;
 
     void Awake()
     {
@@ -49,6 +49,8 @@ public class boatMove : MonoBehaviour
         rb.AddRelativeForce(0, 0, rb.mass * speed * rb.linearDamping * movementIn);
         rb.AddTorque(Vector3.up * rb.inertiaTensor.y * rotate * Mathf.Deg2Rad * rb.angularDamping * rotationIn);
 
-        outp = rb.angularVelocity.y * Mathf.Rad2Deg;
+        outSpd = Vector3.Dot(transform.forward, rb.linearVelocity);
+        outGlbSpd = rb.linearVelocity.magnitude;
+        outRotSpd = rb.angularVelocity.y * Mathf.Rad2Deg;
     }
 }
