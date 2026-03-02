@@ -5,9 +5,11 @@ public class boatCombat : MonoBehaviour
     public enum Classes {Cutter, Brigantine, Frigate, Galleon};
     public Classes shipClass = Classes.Cutter;
 
-    //team stuff
+    //team/ID stuff
     public bool isPlayer = false;
     public int team = 0;
+    public int gameID;
+    RespawnManager rMan;
 
     //stats
     public float speed;
@@ -32,6 +34,9 @@ public class boatCombat : MonoBehaviour
     public float reloadSpecial;
     public Vector2 aimPos;
 
+    bool onFire = false;
+    bool chained = false;
+
     //reticle
     public float reloadProgress;
 
@@ -52,6 +57,7 @@ public class boatCombat : MonoBehaviour
     void Awake()
     {
         bm = GetComponent<boatMove>();
+        rMan = GameObject.Find("RoundManager").GetComponent<RespawnManager>();
 
         //Set stats and cannons based on class
         switch (shipClass)
@@ -134,6 +140,35 @@ public class boatCombat : MonoBehaviour
         {
             cannonRangeMat = Resources.Load("SolidMaterials/red60", typeof(Material)) as Material;
             cannonRangeMatEmpty = Resources.Load("SolidMaterials/red10", typeof(Material)) as Material;
+        }
+    }
+
+    public void TakeDamage(int damage, bool fire, bool chain)
+    {
+        health -= damage;
+        if (health < 0)
+        {
+            health = 0;
+        }
+        if (fire)
+        {
+            onFire = true;
+        }
+        if (chain)
+        {
+            chained = true;
+        }
+    }
+
+    void Sink()
+    {
+        if (isPlayer)
+        {
+            //sort out death screen
+        }
+        else
+        {
+            //chance to change class
         }
     }
 

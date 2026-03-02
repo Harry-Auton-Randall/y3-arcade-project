@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public class cannonballMove : MonoBehaviour
 {
@@ -70,7 +71,8 @@ public class cannonballMove : MonoBehaviour
             //boat hit
             if (collision.gameObject.layer == 7)
             {
-                //call health-lowering function in boatCombat
+                //Debug.Log(DateTime.Now + "    " + collision.transform.parent.gameObject.name);
+                collision.transform.parent.GetComponent<boatCombat>().TakeDamage(1, fire, chain);
                 if (!pierce)
                 {
                     Destroy(this.gameObject);
