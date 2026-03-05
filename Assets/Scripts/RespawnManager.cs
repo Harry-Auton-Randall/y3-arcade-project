@@ -44,12 +44,16 @@ public class RespawnManager : MonoBehaviour
     {
         //add ifs/switches to spawn player/AI ships of all classes
         instance = Instantiate(cutterP);
-        instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team);
+        instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team, id);
     }
 
     public void KillShip(int id)
     {
         shipStatuses[id].RegisterKill(respawnTime, lives);
+    }
+    public void ChangeClass(int id, int classIn)
+    {
+        shipStatuses[id].SetClass(classIn);
     }
 }
 
@@ -77,6 +81,10 @@ public class ShipInfo
     public void SetRespawn(float respawnIn)
     {
         respawnProgress = respawnIn;
+    }
+    public void SetClass(int classIn)
+    {
+        shipClass = classIn;
     }
     public void RegisterKill(float respawnTimeIn, bool livesOn)
     {

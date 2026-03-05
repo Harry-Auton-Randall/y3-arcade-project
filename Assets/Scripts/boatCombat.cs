@@ -124,11 +124,12 @@ public class boatCombat : MonoBehaviour
 
         hullCollider = transform.Find("hull").GetComponent<Collider>();
 
-        SetTeamStuff(team); //TEMPORARY - base team stuff off of scene-specified settings, need to change eventually
+        //SetTeamStuff(team); //TEMPORARY - base team stuff off of scene-specified settings, need to change eventually
     }
 
-    public void SetTeamStuff(int teamIn)
+    public void SetTeamStuff(int teamIn, int gameIDIn)
     {
+        gameID = gameIDIn;
         team = teamIn;
         //if(isPlayer || (team == playerTeam && team != 0))
         if (isPlayer)
@@ -146,9 +147,10 @@ public class boatCombat : MonoBehaviour
     public void TakeDamage(int damage, bool fire, bool chain)
     {
         health -= damage;
-        if (health < 0)
+        if (health <= 0)
         {
             health = 0;
+            Sink();
         }
         if (fire)
         {
@@ -164,12 +166,14 @@ public class boatCombat : MonoBehaviour
     {
         if (isPlayer)
         {
-            //sort out death screen
+            //deathScreen object stuff
         }
         else
         {
-            //chance to change class
+            GameObject.Find("RoundManager").GetComponent<RespawnManager>().ChangeClass(gameID, Random.Range(0, 4));
         }
+        GameObject.Find("RoundManager").GetComponent<RespawnManager>().KillShip(gameID);
+        Destroy(this.gameObject);
     }
 
     //speed and rotate initialised in this script and written to boatMove, so each ship can use the same boatMove script
