@@ -5,6 +5,8 @@ public class RespawnManager : MonoBehaviour
     public GameObject cutterP;
     GameObject instance;
 
+    DeathScreen ds;
+
     public float respawnTime = 5f;
     public bool lives = false;
     public int maxLives = 1;
@@ -13,6 +15,7 @@ public class RespawnManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
     {
+        ds = GameObject.Find("/deathScreen").GetComponent<DeathScreen>();
         shipStatuses = new ShipInfo[] { new ShipInfo(true, 0, 1) };
         for (int i = 0; i < shipStatuses.Length; i++)
         {
@@ -43,7 +46,9 @@ public class RespawnManager : MonoBehaviour
     void SpawnShip(int id)
     {
         //add ifs/switches to spawn player/AI ships of all classes
+        ds.Disable();
         instance = Instantiate(cutterP);
+
         instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team, id);
     }
 

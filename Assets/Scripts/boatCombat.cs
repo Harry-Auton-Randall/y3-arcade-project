@@ -63,9 +63,9 @@ public class boatCombat : MonoBehaviour
         switch (shipClass)
         {
             case Classes.Cutter:
-                speed = 8f;
+                speed = 12f;
                 rotate = 90f;
-                maxHealth = 20;
+                maxHealth = 10;
                 maxReload = 3f;
                 maxReloadSpecial = 15f;
 
@@ -77,9 +77,9 @@ public class boatCombat : MonoBehaviour
                 break;
 
             case Classes.Brigantine:
-                speed = 6f;
+                speed = 9f;
                 rotate = 75f;
-                maxHealth = 30;
+                maxHealth = 15;
                 maxReload = 4f;
                 maxReloadSpecial = 20f;
 
@@ -90,9 +90,9 @@ public class boatCombat : MonoBehaviour
                 break;
 
             case Classes.Frigate:
-                speed = 4.5f;
+                speed = 6.5f;
                 rotate = 50f;
-                maxHealth = 40;
+                maxHealth = 20;
                 maxReload = 5f;
                 maxReloadSpecial = 25f;
 
@@ -102,9 +102,9 @@ public class boatCombat : MonoBehaviour
                 break;
 
             case Classes.Galleon:
-                speed = 3.5f;
+                speed = 5f;
                 rotate = 35f;
-                maxHealth = 60;
+                maxHealth = 30;
                 maxReload = 6f;
                 maxReloadSpecial = 30f;
 
@@ -166,11 +166,11 @@ public class boatCombat : MonoBehaviour
     {
         if (isPlayer)
         {
-            //deathScreen object stuff
+            GameObject.Find("/deathScreen").GetComponent<DeathScreen>().Enable(gameID, transform.Find("CameraBase/CameraMove/CameraRot/PlayerCamera"));
         }
         else
         {
-            GameObject.Find("RoundManager").GetComponent<RespawnManager>().ChangeClass(gameID, Random.Range(0, 4));
+            GameObject.Find("/RoundManager").GetComponent<RespawnManager>().ChangeClass(gameID, Random.Range(0, 4));
         }
         GameObject.Find("RoundManager").GetComponent<RespawnManager>().KillShip(gameID);
         Destroy(this.gameObject);
