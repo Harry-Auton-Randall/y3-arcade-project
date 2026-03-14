@@ -911,7 +911,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RespawnManager
   cutterP: {fileID: 5256507234019018584, guid: 1dd6b235f4e286048bddbdd6a942cd97, type: 3}
-  respawnTime: 5
+  respawnTime: 10
   lives: 0
   maxLives: 1
   ships: 32
@@ -1089,7 +1089,7 @@ GameObject:
   - component: {fileID: 805234944}
   - component: {fileID: 805234943}
   m_Layer: 5
-  m_Name: Text (Legacy) (1)
+  m_Name: respawningText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1121,7 +1121,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 805234941}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
   m_Name: 
@@ -1655,7 +1655,7 @@ GameObject:
   - component: {fileID: 1292971077}
   - component: {fileID: 1292971076}
   m_Layer: 5
-  m_Name: Text (Legacy)
+  m_Name: sunkText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1687,7 +1687,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1292971074}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
   m_Name: 
@@ -1713,7 +1713,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: SUNK :)
+  m_Text: SUNK
 --- !u!222 &1292971077
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -7,7 +7,7 @@ public class RespawnManager : MonoBehaviour
 
     DeathScreen ds;
 
-    public float respawnTime = 5f;
+    public float respawnTime = 10f;
     public bool lives = false;
     public int maxLives = 1;
     public int ships = 32;

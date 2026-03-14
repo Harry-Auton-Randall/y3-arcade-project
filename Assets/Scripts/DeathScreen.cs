@@ -1,10 +1,13 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DeathScreen : MonoBehaviour
 {
     Camera deathCam;
+    Canvas deathCan;
+    Text sunkT, respawningT;
     RespawnManager rm;
-    public float respawnTime;
+    public int respawnTime;
     float zoomOutTime, zoomOut;
     Vector3 initialPos;
     int gameID;
@@ -12,6 +15,9 @@ public class DeathScreen : MonoBehaviour
     void Awake()
     {
         deathCam = transform.Find("deathCamera").GetComponent<Camera>();
+        deathCan = transform.Find("deathCanvas").GetComponent<Canvas>();
+        sunkT = transform.Find("deathCanvas/sunkText").GetComponent<Text>();
+        respawningT = transform.Find("deathCanvas/respawningText").GetComponent<Text>();
         rm = GameObject.Find("/RoundManager").GetComponent<RespawnManager>();
     }
 
@@ -22,7 +28,14 @@ public class DeathScreen : MonoBehaviour
         deathCam.transform.rotation = camPosition.rotation;
         deathCam.enabled = true;
         deathCam.GetComponent<AudioListener>().enabled = true;
-        
+        //deathCan.enabled = true;
+        //sunkT.fontSize = 1;
+        //respawningT.fontSize = 1;
+        //sunkT.fontSize = 76;
+        //respawningT.fontSize = 38;
+        sunkT.enabled = true;
+        respawningT.enabled = true;
+
         zoomOut = 0;
         zoomOutTime = 0;
         initialPos = camPosition.position;
@@ -31,6 +44,9 @@ public class DeathScreen : MonoBehaviour
     {
         deathCam.enabled = false;
         deathCam.GetComponent<AudioListener>().enabled = false;
+        //deathCan.enabled = false;
+        sunkT.enabled = false;
+        respawningT.enabled = false;
     }
 
     // Update is called once per frame
@@ -39,6 +55,9 @@ public class DeathScreen : MonoBehaviour
         zoomOutTime += (Time.deltaTime * 1);
         zoomOut = (15 * zoomOutTime) / (zoomOutTime + 1);
         deathCam.transform.position = initialPos + deathCam.transform.forward * -1 * zoomOut;
-        respawnTime = rm.shipStatuses[gameID].respawnProgress;
+        respawnTime = (int)rm.shipStatuses[gameID].respawnProgress;
+        respawnTime += 1;
+
+        respawningT.text = ("Respawning in " + respawnTime);
     }
 }
