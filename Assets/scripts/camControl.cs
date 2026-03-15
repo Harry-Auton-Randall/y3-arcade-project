@@ -5,12 +5,13 @@ using UnityEngine.InputSystem;
 public class camControl : MonoBehaviour
 {
     public Vector2 mousePosition, mousePositionClamp, mousePositionAdj;
-    Vector2 screenSize;
-    Vector3 camPosition;
+    public Vector2 screenSize;
+    public Vector3 camPosition;
     Vector3 camBaseRotation = new Vector3(0f, 0f, 0f);
 
     Transform camBase, camMove, camRot;
-    public Camera cam;
+    public Camera cam, camSpy;
+    public bool cameraSpy = false;
     public bool cameraOrth = false;
     public bool cameraTilt = true;
     public int cameraRotY = 0;
@@ -26,6 +27,7 @@ public class camControl : MonoBehaviour
         camRot = transform.Find("CameraBase/CameraMove/CameraRot");
 
         cam = transform.Find("CameraBase/CameraMove/CameraRot/PlayerCamera").GetComponent<Camera>();
+        camSpy = transform.Find("CameraBase/CameraMove/CameraSpyglass").GetComponent<Camera>();
 
         camPosition = camMove.localPosition;
     }
@@ -60,7 +62,19 @@ public class camControl : MonoBehaviour
         //moves the camera with mousePosition
         camPosition.x = mousePositionAdj.x * 13.5f * (screenSize.x / screenSize.y);
         camPosition.z = (mousePositionAdj.y * 13.5f);
-        if (!cameraOrth && cameraTilt)
+        if (cameraSpy)
+        {
+            camPosition.x *= 2;
+            camPosition.z *= 2;
+            cam.enabled = false;
+            camSpy.enabled = true;
+        }
+        else
+        {
+            cam.enabled = true;
+            camSpy.enabled = false;
+        }
+        if (!cameraOrth && cameraTilt && !cameraSpy)
         {
             camPosition.z = camPosition.z - 3.25f;
         }
