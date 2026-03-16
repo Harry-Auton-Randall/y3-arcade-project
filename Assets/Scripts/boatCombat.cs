@@ -29,13 +29,13 @@ public class boatCombat : MonoBehaviour
     public float unchainTime;
 
     //current variables
-    int health;
+    public int health;
     public float reloadL, reloadR;
     public float reloadSpecial;
     public Vector2 aimPos;
 
-    bool onFire = false;
-    bool chained = false;
+    public bool onFire = false;
+    public bool chained = false;
 
     //reticle
     public float reloadProgress;
@@ -49,6 +49,16 @@ public class boatCombat : MonoBehaviour
     public Material cannonRangeMat, cannonRangeMatEmpty;
     Transform cannonRangeTipL, cannonRangeTipR;//for Frigates and Galleons
     bool goodAimL, goodAimR;
+
+    //repairing
+    public float repairProgress;
+    public bool isRepairing;
+
+    //fire
+    float fireDuration;
+    int fireDamage;
+    public float fireDamageInterval = 5;
+    public int fireDamageTotal = 3;
 
     Collider hullCollider;
 
@@ -68,6 +78,7 @@ public class boatCombat : MonoBehaviour
                 maxHealth = 10;
                 maxReload = 3f;
                 maxReloadSpecial = 15f;
+                unchainTime = repairTime;
 
                 cannonsR = new GameObject[] { transform.Find("cannon").gameObject };
                 cannonCentreR.x = cannonsR[0].transform.localPosition.x;
@@ -82,6 +93,7 @@ public class boatCombat : MonoBehaviour
                 maxHealth = 15;
                 maxReload = 4f;
                 maxReloadSpecial = 20f;
+                unchainTime = repairTime * (4f/3f);
 
                 //set cannons here
                 cannonCentreL = Vector3.zero;
@@ -95,6 +107,7 @@ public class boatCombat : MonoBehaviour
                 maxHealth = 20;
                 maxReload = 5f;
                 maxReloadSpecial = 25f;
+                unchainTime = repairTime * (5f/3f);
 
                 //set cannons here
                 //set cannon centres here
@@ -107,6 +120,7 @@ public class boatCombat : MonoBehaviour
                 maxHealth = 30;
                 maxReload = 6f;
                 maxReloadSpecial = 30f;
+                unchainTime = repairTime * 2;
 
                 //set cannons here
                 //set cannon centres here
@@ -155,6 +169,8 @@ public class boatCombat : MonoBehaviour
         if (fire)
         {
             onFire = true;
+            fireDuration = 0;
+            fireDamage = 0;
         }
         if (chain)
         {
@@ -176,6 +192,50 @@ public class boatCombat : MonoBehaviour
         Destroy(this.gameObject);
     }
 
+    public void AttemptRepair(float n)
+    {
+        if (n > 0 && ((health < maxHealth && wood > 0) || onFire || chained))
+        {
+            //NOTE: order of priority is: dousing fires, unchaining, normal repairs
+            isRepairing = true;
+            if (onFire)
+            {
+                repairProgress += (100 * (Time.deltaTime / repairTime));
+            }
+            else if (chained)
+            {
+                repairProgress += (100 * (Time.deltaTime / unchainTime));
+            }
+            else
+            {
+                repairProgress += (100 * (Time.deltaTime / repairTime));
+            }
+
+            if (repairProgress >= 100)
+            {
+                repairProgress -= 100;
+                if (onFire)
+                {
+                    onFire = false;
+                }
+                else if (chained)
+                {
+                    chained = false;
+                }
+                else
+                {
+                    health += 1;
+                    wood -= 1;
+                }
+            }
+        }
+        else
+        {
+            isRepairing = false;
+            repairProgress = 0;
+        }
+    }
+
     //speed and rotate initialised in this script and written to boatMove, so each ship can use the same boatMove script
     void Start()
     {
@@ -184,6 +244,26 @@ public class boatCombat : MonoBehaviour
 
     void Update()
     {
+        //on fire - deals 1 damage every (fireDamageInterval) seconds
+        //checks that 1. enough time has passed and 2. it hasn't already dealt damage for that time period (fireDamage)
+        if (onFire)
+        {
+            fireDuration += Time.deltaTime;
+            for (int i=1; i<fireDamageTotal; i++)
+            {
+                if (fireDuration >= fireDamageInterval * i && fireDamage == i-1)
+                {
+                    TakeDamage(1, false, false);
+                    fireDamage += 1;
+                }
+            }
+            if (fireDuration >= fireDamageInterval * fireDamageTotal && fireDamage == fireDamageTotal-1)
+            {
+                TakeDamage(1, false, false);
+                onFire = false;
+            }
+        }
+
         //Increase reload values
         if (shipClass != Classes.Cutter)
         {

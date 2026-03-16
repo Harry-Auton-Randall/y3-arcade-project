@@ -21,7 +21,7 @@ public class boatControlPlayer : MonoBehaviour
 
     //Input system stuff
     InputActionMap mainActions;
-    InputAction movementA, rotationA, camRotCWA, camRotCCWA, shootA, spyglassA;
+    InputAction movementA, rotationA, camRotCWA, camRotCCWA, shootA, spyglassA, repairA;
 
     bool usingSpyglass;
     RectTransform spyglassOutline;
@@ -50,6 +50,7 @@ public class boatControlPlayer : MonoBehaviour
         camRotCCWA = mainActions.FindAction("CamRotCCW");
         shootA = mainActions.FindAction("Shoot");
         spyglassA = mainActions.FindAction("Spyglass");
+        repairA = mainActions.FindAction("Repair");
 
         spyglassOutline = transform.Find("spyglassCanvas/Image").GetComponent<RectTransform>();
         spyglassOutlineImage = transform.Find("spyglassCanvas/Image").GetComponent<Image>();
@@ -109,8 +110,11 @@ public class boatControlPlayer : MonoBehaviour
         //Runs CamControl's main stuff
         cc.CamControlUpdate();
 
+        //repairing
+        bc.AttemptRepair(repairA.ReadValue<float>());
+
         //Movement stuff
-        if (!usingSpyglass)
+        if (!usingSpyglass && !bc.isRepairing && !bc.chained)
         {
             bm.SetMovementIn(movementA.ReadValue<float>());
             bm.SetRotationIn(rotationA.ReadValue<float>());
@@ -134,7 +138,7 @@ public class boatControlPlayer : MonoBehaviour
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, oceanLayer))
         {
             reticle.transform.position = hit.point;
-            if (!usingSpyglass)
+            if (!usingSpyglass && !bc.isRepairing)
             {
                 bc.aimPos.x = reticle.transform.localPosition.x;
                 bc.aimPos.y = reticle.transform.localPosition.z;
@@ -148,6 +152,7 @@ public class boatControlPlayer : MonoBehaviour
         reticle.transform.rotation = Quaternion.Euler(0,cc.cameraRotYGrad,0);
         reticleCircle.value = bc.reloadProgress;
 
+        //Spyglass canvas stuff
         if (usingSpyglass)
         {
             spyglassOutlineImage.enabled = true;

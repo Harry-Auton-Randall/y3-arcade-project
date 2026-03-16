@@ -19,7 +19,7 @@ public class testCannon : MonoBehaviour
         t += Time.fixedDeltaTime;
         if (t > 2.5f)
         {
-            cs.Shoot(40, 0.75f, false, 1, ignore);
+            cs.Shoot(40, 0.75f, false, 0, ignore);
             t = 0;
         }
         

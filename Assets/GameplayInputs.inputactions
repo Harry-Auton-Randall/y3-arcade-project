@@ -52,6 +52,24 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "AmmoForward",
+                    "type": "Button",
+                    "id": "4d91fafb-51c2-4bbc-953f-7bf0186a86a2",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "AmmoBackward",
+                    "type": "Button",
+                    "id": "fb9ab2e3-753f-4cd4-bd4a-a9765e5deda4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Shoot",
                     "type": "Button",
                     "id": "5a6ff1fc-de0e-4f77-a381-1fd3ad938f51",
@@ -64,6 +82,24 @@
                     "name": "Spyglass",
                     "type": "Value",
                     "id": "1cbe8812-2504-4537-a514-3bf1fb26560c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Repair",
+                    "type": "Value",
+                    "id": "9ca367a4-adb0-428e-9a52-11400162a57e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Special",
+                    "type": "Value",
+                    "id": "bd0803d1-1ae2-45a3-a1d0-e4ad993a69d8",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -260,6 +296,28 @@
                 },
                 {
                     "name": "",
+                    "id": "14444793-a1e9-4fe1-86a5-c590d134c3bf",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AmmoForward",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e1b2c446-46cb-40e9-8f9e-89021c4ee6cd",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AmmoBackward",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "2b3fd5d3-f30e-4050-9054-bd485989f7a3",
                     "path": "<Mouse>/leftButton",
                     "interactions": "",
@@ -277,6 +335,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Spyglass",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ab878f13-78b5-416a-abb3-25ef909ba5ee",
+                    "path": "<Keyboard>/leftShift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Repair",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d946f531-1333-4efb-9029-69cea31f8899",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Special",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
