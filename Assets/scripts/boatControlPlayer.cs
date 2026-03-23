@@ -22,6 +22,7 @@ public class boatControlPlayer : MonoBehaviour
     //Input system stuff
     InputActionMap mainActions;
     InputAction movementA, rotationA, camRotCWA, camRotCCWA, shootA, spyglassA, repairA;
+    InputAction ammoForwardA, ammoBackwardA, numBar1A, numBar2A, numBar3A, numBar4A;
 
     bool usingSpyglass;
     RectTransform spyglassOutline;
@@ -52,6 +53,13 @@ public class boatControlPlayer : MonoBehaviour
         spyglassA = mainActions.FindAction("Spyglass");
         repairA = mainActions.FindAction("Repair");
 
+        ammoForwardA = mainActions.FindAction("AmmoForward");
+        ammoBackwardA = mainActions.FindAction("AmmoBackward");
+        numBar1A = mainActions.FindAction("NumBar1");
+        numBar2A = mainActions.FindAction("NumBar2");
+        numBar3A = mainActions.FindAction("NumBar3");
+        numBar4A = mainActions.FindAction("NumBar4");
+
         spyglassOutline = transform.Find("spyglassCanvas/Image").GetComponent<RectTransform>();
         spyglassOutlineImage = transform.Find("spyglassCanvas/Image").GetComponent<Image>();
 
@@ -69,6 +77,13 @@ public class boatControlPlayer : MonoBehaviour
         camRotCWA.performed += OnCamRotCW;
         camRotCCWA.performed += OnCamRotCCW;
         shootA.performed += OnShoot;
+
+        ammoForwardA.performed += OnAmmoForward;
+        ammoBackwardA.performed += OnAmmoBackward;
+        numBar1A.performed += OnNumBar1;
+        numBar2A.performed += OnNumBar2;
+        numBar3A.performed += OnNumBar3;
+        numBar4A.performed += OnNumBar4;
     }
     void OnDisable()
     {
@@ -76,6 +91,13 @@ public class boatControlPlayer : MonoBehaviour
         camRotCWA.performed -= OnCamRotCW;
         camRotCCWA.performed -= OnCamRotCCW;
         shootA.performed -= OnShoot;
+
+        ammoForwardA.performed -= OnAmmoForward;
+        ammoBackwardA.performed -= OnAmmoBackward;
+        numBar1A.performed -= OnNumBar1;
+        numBar2A.performed -= OnNumBar2;
+        numBar3A.performed -= OnNumBar3;
+        numBar4A.performed -= OnNumBar4;
     }
 
     void OnCamRotCW(InputAction.CallbackContext context)
@@ -92,6 +114,31 @@ public class boatControlPlayer : MonoBehaviour
         {
             bc.Shoot();
         }
+    }
+
+    void OnAmmoForward(InputAction.CallbackContext context)
+    {
+        bc.SwitchAmmo(1);
+    }
+    void OnAmmoBackward(InputAction.CallbackContext context)
+    {
+        bc.SwitchAmmo(-1);
+    }
+    void OnNumBar1(InputAction.CallbackContext context)
+    {
+        bc.SelectAmmo(0);
+    }
+    void OnNumBar2(InputAction.CallbackContext context)
+    {
+        bc.SelectAmmo(1);
+    }
+    void OnNumBar3(InputAction.CallbackContext context)
+    {
+        bc.SelectAmmo(2);
+    }
+    void OnNumBar4(InputAction.CallbackContext context)
+    {
+        bc.SelectAmmo(3);
     }
 
     void Update()

@@ -21,12 +21,16 @@ public class boatCombat : MonoBehaviour
     //inventory
     public int maxWood;
     public int wood = 0;
-    public int ammoChain = 0;
-    public int ammoFire = 0;
-    public int ammoPierce = 0;
+    //public int ammoChain = 0;
+    //public int ammoFire = 0;
+    //public int ammoPierce = 0;
+    public int[] ammoTypes = new int[] { 0, 0, 0, 0 }; //standard, chain, fire, piercing
 
     public float repairTime = 2.5f;
     public float unchainTime;
+
+    int resourceAdded;
+    public int selectedAmmo = 0;
 
     //current variables
     public int health;
@@ -236,6 +240,65 @@ public class boatCombat : MonoBehaviour
         }
     }
 
+    public void AddResource(int type, int amount)
+    {
+        resourceAdded = amount;
+
+        if (type == 0) //wood
+        {
+            if (amount + wood > maxWood)
+            {
+                resourceAdded = maxWood - wood;
+            }
+            wood += resourceAdded;
+        }
+        else //not wood
+        {
+            ammoTypes[type] += resourceAdded;
+        }
+
+        //(make a popup showing what was gained and how much here)
+    }
+
+    public void SwitchAmmo(int direction) //1 or -1
+    {
+        selectedAmmo += direction;
+
+        //keep between 0 and 3
+        if(selectedAmmo > 3)
+        {
+            selectedAmmo = 0;
+        }
+        else if(selectedAmmo < 0)
+        {
+            selectedAmmo = 3;
+        }
+
+        //Uses recursion to prevent switching to ammo types with 0 ammo
+        if (selectedAmmo != 0)
+        {
+            if (ammoTypes[selectedAmmo] <= 0)
+            {
+                this.SwitchAmmo(direction);
+            }
+        }
+    }
+
+    public void SelectAmmo(int type)
+    {
+        if (type != 0)
+        {
+            if (ammoTypes[type] > 0)
+            {
+                selectedAmmo = type;
+            }
+        }
+        else
+        {
+            selectedAmmo = type;
+        }
+    }
+
     //speed and rotate initialised in this script and written to boatMove, so each ship can use the same boatMove script
     void Start()
     {
@@ -344,12 +407,23 @@ public class boatCombat : MonoBehaviour
                 //if(isPlayer || (team == playerTeam && team != 0))
                 if (isPlayer)
                 {
-                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, true, 0, hullCollider);
+                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, true, selectedAmmo, hullCollider);
                 }
                 else
                 {
-                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, false, 0, hullCollider);
+                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, false, selectedAmmo, hullCollider);
                 }
+
+                if (selectedAmmo != 0)
+                {
+                    ammoTypes[selectedAmmo] -= 1;
+                    if (ammoTypes[selectedAmmo] <= 0)
+                    {
+                        ammoTypes[selectedAmmo] = 0;
+                        selectedAmmo = 0;
+                    }
+                }
+
                 reloadR = 0;
             }
         }
