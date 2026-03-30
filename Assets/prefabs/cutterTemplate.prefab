@@ -650,18 +650,25 @@ MonoBehaviour:
   maxHealth: 0
   maxWood: 0
   wood: 0
-  ammoChain: 0
-  ammoFire: 0
-  ammoPierce: 0
+  ammoTypes: 00000000000000000000000000000000
   repairTime: 2.5
   unchainTime: 0
+  selectedAmmo: 0
+  health: 0
   reloadL: 0
   reloadR: 0
   reloadSpecial: 0
   aimPos: {x: 0, y: 0}
+  onFire: 0
+  chained: 0
   reloadProgress: 0
   cannonRangeMat: {fileID: 0}
   cannonRangeMatEmpty: {fileID: 0}
+  volleyFireRate: 0
+  repairProgress: 0
+  isRepairing: 0
+  fireDamageInterval: 5
+  fireDamageTotal: 3
 --- !u!1001 &8683781601610849483
 PrefabInstance:
   m_ObjectHideFlags: 0

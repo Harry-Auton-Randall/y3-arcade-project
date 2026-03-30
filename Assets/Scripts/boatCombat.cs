@@ -53,11 +53,12 @@ public class boatCombat : MonoBehaviour
 
     Renderer cannonRangeL, cannonRangeR, cannonRangeL2, cannonRangeR2;//Cutter uses cannonRangeR, Brigantine uses all 4
     public Material cannonRangeMat, cannonRangeMatEmpty;
-    Transform cannonRangeTipL, cannonRangeTipR;//for Frigates and Galleons
+    Transform cannonRangeBoneL, cannonRangeBoneR, cannonRangeBoneL2, cannonRangeBoneR2;//for Frigates and Galleons
     bool goodAimL, goodAimR;
+    Vector3 cannonRangeDefaultRot; //for frigates and galleons, because bones imported from Blender have weird rotations
 
     public float volleyFireRate;
-    int[] volleyFireOrder;
+    int[] volleyFireOrderL, volleyFireOrderR;
 
     //repairing
     public float repairProgress;
@@ -108,16 +109,15 @@ public class boatCombat : MonoBehaviour
                                               transform.Find("cannonL2").gameObject };
                 cannonsR = new GameObject[] { transform.Find("cannonR1").gameObject,
                                               transform.Find("cannonR2").gameObject };
-                cannonCentreL = Vector3.zero;
-                cannonCentreR = Vector3.zero;
+                cannonCentreL = Vector2.zero;
+                cannonCentreR = Vector2.zero;
                 cannonRangeL = cannonsL[0].transform.Find("range").GetComponent<Renderer>();
                 cannonRangeL2 = cannonsL[1].transform.Find("range").GetComponent<Renderer>();
                 cannonRangeR = cannonsR[0].transform.Find("range").GetComponent<Renderer>();
                 cannonRangeR2 = cannonsR[1].transform.Find("range").GetComponent<Renderer>();
-                cannonXDist = cannonsR[0].transform.localPosition.x;
 
-                volleyFireRate = (1f / 6f);
-                volleyFireOrder = new int[] { 0, 1 };
+                volleyFireRate = 0.125f;
+                volleyFireOrderL = new int[] { 0, 1 };
                 break;
 
             case Classes.Frigate:
@@ -128,12 +128,26 @@ public class boatCombat : MonoBehaviour
                 maxReloadSpecial = 25f;
                 unchainTime = repairTime * (5f/3f);
 
-                //set cannons here
-                //set cannon centres here
-                //set cannon ranges here
+                cannonsL = new GameObject[] { transform.Find("cannonL1").gameObject,
+                                              transform.Find("cannonL2").gameObject,
+                                              transform.Find("cannonL3").gameObject,
+                                              transform.Find("cannonL4").gameObject };
+                cannonsR = new GameObject[] { transform.Find("cannonR1").gameObject,
+                                              transform.Find("cannonR2").gameObject,
+                                              transform.Find("cannonR3").gameObject,
+                                              transform.Find("cannonR4").gameObject };
+                cannonCentreL = new Vector2(0.5f, 0);
+                cannonCentreR = new Vector2(-0.5f, 0);
+                cannonRangeL = transform.Find("cannonRangeL/mesh").GetComponent<Renderer>();
+                cannonRangeR = transform.Find("cannonRangeR/mesh").GetComponent<Renderer>();
 
-                volleyFireRate = 0.1f;
-                volleyFireOrder = new int[] { 0, 1, 2, 3 };
+                cannonRangeBoneL = transform.Find("cannonRangeL/Armature/baseBone/rotateBone");
+                cannonRangeBoneL2 = transform.Find("cannonRangeL/Armature/baseBone/rotateBone/tipBone");
+                cannonRangeBoneR = transform.Find("cannonRangeR/Armature/baseBone/rotateBone");
+                cannonRangeBoneR2 = transform.Find("cannonRangeR/Armature/baseBone/rotateBone/tipBone");
+
+                volleyFireRate = 0.08f;
+                volleyFireOrderL = new int[] { 0, 1, 2, 3 };
                 break;
 
             case Classes.Galleon:
@@ -144,13 +158,45 @@ public class boatCombat : MonoBehaviour
                 maxReloadSpecial = 30f;
                 unchainTime = repairTime * 2;
 
-                //set cannons here
-                //set cannon centres here
-                //set cannon ranges here
+                cannonsL = new GameObject[] { transform.Find("cannonL1").gameObject,
+                                              transform.Find("cannonL2").gameObject,
+                                              transform.Find("cannonL3").gameObject,
+                                              transform.Find("cannonL4").gameObject,
+                                              transform.Find("cannonL5").gameObject,
+                                              transform.Find("cannonL6").gameObject };
+                cannonsR = new GameObject[] { transform.Find("cannonR1").gameObject,
+                                              transform.Find("cannonR2").gameObject,
+                                              transform.Find("cannonR3").gameObject,
+                                              transform.Find("cannonR4").gameObject,
+                                              transform.Find("cannonR5").gameObject,
+                                              transform.Find("cannonR6").gameObject };
+                cannonCentreL = new Vector2(0.625f, 0);
+                cannonCentreR = new Vector2(-0.625f, 0);
+                cannonRangeL = transform.Find("cannonRangeL/mesh").GetComponent<Renderer>();
+                cannonRangeR = transform.Find("cannonRangeR/mesh").GetComponent<Renderer>();
 
-                volleyFireRate = 0.08f;
-                volleyFireOrder = new int[] { 0, 1, 2, 3, 4, 5 };
+                cannonRangeBoneL = transform.Find("cannonRangeL/Armature/baseBone/rotateBone");
+                cannonRangeBoneL2 = transform.Find("cannonRangeL/Armature/baseBone/rotateBone/tipBone");
+                cannonRangeBoneR = transform.Find("cannonRangeR/Armature/baseBone/rotateBone");
+                cannonRangeBoneR2 = transform.Find("cannonRangeR/Armature/baseBone/rotateBone/tipBone");
+
+                volleyFireRate = 0.06f;
+                volleyFireOrderL = new int[] { 0, 1, 2, 3, 4, 5 };
                 break;
+        }
+        if (shipClass != Classes.Cutter)
+        {
+            cannonXDist = cannonsR[0].transform.localPosition.x;
+            volleyFireOrderR = new int[volleyFireOrderL.Length];
+            for (int i=0;i<volleyFireOrderL.Length;i++)
+            {
+                volleyFireOrderR[i] = volleyFireOrderL[i];
+            }
+        }
+
+        if (shipClass == Classes.Frigate || shipClass == Classes.Galleon)
+        {
+            cannonRangeDefaultRot = cannonRangeBoneL.localEulerAngles;
         }
 
         //Set stats based on class-specific stats
@@ -439,6 +485,16 @@ public class boatCombat : MonoBehaviour
                             0);
                     }
                 }
+                else
+                {
+                    cannonRangeDefaultRot.y = (Mathf.Atan2(aimPos.x - cannonCentreL.x, aimPos.y - cannonCentreL.y) * Mathf.Rad2Deg) - 90;
+                    cannonRangeBoneL.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
+                    cannonRangeBoneL2.localRotation = Quaternion.Euler(0, 0, -1 * (cannonRangeDefaultRot.y + 180));
+                    for (int i = 0; i < cannonsL.Length; i++)
+                    {
+                        cannonsL[i].transform.localRotation = Quaternion.Euler(0, cannonRangeDefaultRot.y + 90, 0);
+                    }
+                }
             }
             else
             {
@@ -465,6 +521,16 @@ public class boatCombat : MonoBehaviour
                         cannonsR[i].transform.localRotation = Quaternion.Euler(0,
                             Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonsR[i].transform.localPosition.x, aimPos.y - cannonsR[i].transform.localPosition.z) * Mathf.Rad2Deg, 45f, 135f),
                             0);
+                    }
+                }
+                else
+                {
+                    cannonRangeDefaultRot.y = (Mathf.Atan2(aimPos.x - cannonCentreR.x, aimPos.y - cannonCentreR.y) * Mathf.Rad2Deg) + 90;
+                    cannonRangeBoneR.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
+                    cannonRangeBoneR2.localRotation = Quaternion.Euler(0, 0, -1 * (cannonRangeDefaultRot.y + 180));
+                    for (int i = 0; i < cannonsR.Length; i++)
+                    {
+                        cannonsR[i].transform.localRotation = Quaternion.Euler(0, cannonRangeDefaultRot.y - 90, 0);
                     }
                 }
             }
@@ -559,11 +625,11 @@ public class boatCombat : MonoBehaviour
                 //if(isPlayer || (team == playerTeam && team != 0))
                 if (isPlayer)
                 {
-                    StartCoroutine(VolleyFire(cannonsL, true, selectedAmmo));
+                    StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, true, selectedAmmo));
                 }
                 else
                 {
-                    StartCoroutine(VolleyFire(cannonsL, false, selectedAmmo));
+                    StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, false, selectedAmmo));
                 }
 
                 if (selectedAmmo != 0)
@@ -583,11 +649,11 @@ public class boatCombat : MonoBehaviour
                 //if(isPlayer || (team == playerTeam && team != 0))
                 if (isPlayer)
                 {
-                    StartCoroutine(VolleyFire(cannonsR, true, selectedAmmo));
+                    StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, true, selectedAmmo));
                 }
                 else
                 {
-                    StartCoroutine(VolleyFire(cannonsR, false, selectedAmmo));
+                    StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, false, selectedAmmo));
                 }
 
                 if (selectedAmmo != 0)
@@ -605,23 +671,23 @@ public class boatCombat : MonoBehaviour
         }
     }
 
-    IEnumerator VolleyFire(GameObject[] broadside, bool isPlayer1, int selectedAmmo1)
+    IEnumerator VolleyFire(int[] volleyOrder, GameObject[] broadside, bool isPlayer1, int selectedAmmo1)
     {
         //shuffle volleyFireOrder
         int temp;
         int position;
-        for (int i=0;i<volleyFireOrder.Length;i++)
+        for (int i=0;i< volleyOrder.Length;i++)
         {
-            position = Random.Range(i, volleyFireOrder.Length);
-            temp = volleyFireOrder[i];
-            volleyFireOrder[i] = volleyFireOrder[position];
-            volleyFireOrder[position] = temp;
+            position = Random.Range(i, volleyOrder.Length);
+            temp = volleyOrder[i];
+            volleyOrder[i] = volleyOrder[position];
+            volleyOrder[position] = temp;
         }
 
         //fire broadside in order of volleyFireOrder
-        for (int i = 0; i < volleyFireOrder.Length; i++)
+        for (int i = 0; i < volleyOrder.Length; i++)
         {
-            broadside[volleyFireOrder[i]].GetComponent<cannonShoot>().Shoot(40, 0.75f, isPlayer1, selectedAmmo1, hullCollider);
+            broadside[volleyOrder[i]].GetComponent<cannonShoot>().Shoot(40, 0.75f, isPlayer1, selectedAmmo1, hullCollider);
             yield return new WaitForSeconds(volleyFireRate);
         }
     }

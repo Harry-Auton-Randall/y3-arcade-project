@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class RespawnManager : MonoBehaviour
 {
+    //temporary
+    public int playerStartingClass;
+
     public GameObject cutterP, brigantineP, frigateP, galleonP;
     public GameObject cutterA, brigantineA, frigateA, galleonA;
 
@@ -19,7 +22,7 @@ public class RespawnManager : MonoBehaviour
     void Awake()
     {
         ds = GameObject.Find("/deathScreen").GetComponent<DeathScreen>();
-        shipStatuses = new ShipInfo[] { new ShipInfo(true, 0, 1) };
+        shipStatuses = new ShipInfo[] { new ShipInfo(true, 0, playerStartingClass) };
         for (int i = 0; i < shipStatuses.Length; i++)
         {
             shipStatuses[i].SetLives(maxLives);
@@ -50,6 +53,9 @@ public class RespawnManager : MonoBehaviour
     {
         if (shipStatuses[id].isPlayer)
         {
+            //temporary
+            ChangeClass(id, playerStartingClass);
+
             ds.Disable();
             switch (shipStatuses[id].shipClass)
             {

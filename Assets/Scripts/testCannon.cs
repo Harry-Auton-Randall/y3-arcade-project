@@ -6,6 +6,7 @@ public class testCannon : MonoBehaviour
     cannonShoot cs;
     float t;
     Collider ignore;
+    public float fireRate = 2.5f;
 
     void Awake()
     {
@@ -17,7 +18,7 @@ public class testCannon : MonoBehaviour
     void FixedUpdate()
     {
         t += Time.fixedDeltaTime;
-        if (t > 2.5f)
+        if (t > fireRate)
         {
             cs.Shoot(40, 0.75f, false, 0, ignore);
             t = 0;
