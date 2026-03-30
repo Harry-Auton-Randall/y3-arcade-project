@@ -2,7 +2,10 @@ using UnityEngine;
 
 public class RespawnManager : MonoBehaviour
 {
-    public GameObject cutterP;
+    public GameObject cutterP, brigantineP, frigateP, galleonP;
+    public GameObject cutterA, brigantineA, frigateA, galleonA;
+
+
     GameObject instance;
 
     DeathScreen ds;
@@ -45,9 +48,43 @@ public class RespawnManager : MonoBehaviour
 
     void SpawnShip(int id)
     {
-        //add ifs/switches to spawn player/AI ships of all classes
-        ds.Disable();
-        instance = Instantiate(cutterP);
+        if (shipStatuses[id].isPlayer)
+        {
+            ds.Disable();
+            switch (shipStatuses[id].shipClass)
+            {
+                case 0:
+                    instance = Instantiate(cutterP);
+                    break;
+                case 1:
+                    instance = Instantiate(brigantineP);
+                    break;
+                case 2:
+                    instance = Instantiate(frigateP);
+                    break;
+                case 3:
+                    instance = Instantiate(galleonP);
+                    break;
+            }
+        }
+        else
+        {
+            switch (shipStatuses[id].shipClass)
+            {
+                case 0:
+                    instance = Instantiate(cutterA);
+                    break;
+                case 1:
+                    instance = Instantiate(brigantineA);
+                    break;
+                case 2:
+                    instance = Instantiate(frigateA);
+                    break;
+                case 3:
+                    instance = Instantiate(galleonA);
+                    break;
+            }
+        }
 
         instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team, id);
     }
