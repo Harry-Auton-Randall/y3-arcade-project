@@ -49,6 +49,9 @@ public class boatCombat : MonoBehaviour
     GameObject[] cannonsL, cannonsR;
     Vector2 cannonCentreL = Vector2.zero;
     Vector2 cannonCentreR = Vector2.zero;
+
+    Vector2 cannonCentreL2 = Vector2.zero; //frigates and galleons
+    Vector2 cannonCentreR2 = Vector2.zero;
     float cannonXDist;
 
     Renderer cannonRangeL, cannonRangeR, cannonRangeL2, cannonRangeR2;//Cutter uses cannonRangeR, Brigantine uses all 4
@@ -138,6 +141,9 @@ public class boatCombat : MonoBehaviour
                                               transform.Find("cannonR4").gameObject };
                 cannonCentreL = new Vector2(0.5f, 0);
                 cannonCentreR = new Vector2(-0.5f, 0);
+                cannonCentreL2 = new Vector2(-1, 0);
+                cannonCentreR2 = new Vector2(1, 0);
+
                 cannonRangeL = transform.Find("cannonRangeL/mesh").GetComponent<Renderer>();
                 cannonRangeR = transform.Find("cannonRangeR/mesh").GetComponent<Renderer>();
 
@@ -172,6 +178,9 @@ public class boatCombat : MonoBehaviour
                                               transform.Find("cannonR6").gameObject };
                 cannonCentreL = new Vector2(0.625f, 0);
                 cannonCentreR = new Vector2(-0.625f, 0);
+                cannonCentreL2 = new Vector2(-1.25f, 0);
+                cannonCentreR2 = new Vector2(1.25f, 0);
+
                 cannonRangeL = transform.Find("cannonRangeL/mesh").GetComponent<Renderer>();
                 cannonRangeR = transform.Find("cannonRangeR/mesh").GetComponent<Renderer>();
 
@@ -487,7 +496,7 @@ public class boatCombat : MonoBehaviour
                 }
                 else
                 {
-                    cannonRangeDefaultRot.y = (Mathf.Atan2(aimPos.x - cannonCentreL.x, aimPos.y - cannonCentreL.y) * Mathf.Rad2Deg) - 90;
+                    cannonRangeDefaultRot.y = Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonCentreL2.x, aimPos.y - cannonCentreL2.y) * Mathf.Rad2Deg, -135f, -45f) - 90;
                     cannonRangeBoneL.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
                     cannonRangeBoneL2.localRotation = Quaternion.Euler(0, 0, -1 * (cannonRangeDefaultRot.y + 180));
                     for (int i = 0; i < cannonsL.Length; i++)
@@ -525,7 +534,7 @@ public class boatCombat : MonoBehaviour
                 }
                 else
                 {
-                    cannonRangeDefaultRot.y = (Mathf.Atan2(aimPos.x - cannonCentreR.x, aimPos.y - cannonCentreR.y) * Mathf.Rad2Deg) + 90;
+                    cannonRangeDefaultRot.y = Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonCentreR2.x, aimPos.y - cannonCentreR2.y) * Mathf.Rad2Deg, 45f, 135f) + 90;
                     cannonRangeBoneR.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
                     cannonRangeBoneR2.localRotation = Quaternion.Euler(0, 0, -1 * (cannonRangeDefaultRot.y + 180));
                     for (int i = 0; i < cannonsR.Length; i++)
