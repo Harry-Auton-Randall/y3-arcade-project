@@ -20,7 +20,7 @@ public class testCannon : MonoBehaviour
         t += Time.fixedDeltaTime;
         if (t > fireRate)
         {
-            cs.Shoot(40, 0.75f, false, 0, ignore);
+            cs.Shoot(40, 0.75f, false, 0, ignore, -1);
             t = 0;
         }
         

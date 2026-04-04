@@ -10,7 +10,7 @@ public class boatCombat : MonoBehaviour
     public bool isPlayer = false;
     public int team = 0;
     public int gameID;
-    RespawnManager rMan;
+    RoundManager rMan;
 
     //stats
     public float speed;
@@ -73,6 +73,11 @@ public class boatCombat : MonoBehaviour
     public float fireDamageInterval = 5;
     public int fireDamageTotal = 3;
 
+    //deathmatch scoring
+    //these are the IDs of the most recent enemy to damage/ignite this ship
+    int latestDamageID = -1;
+    int latestFireID = -1;
+
     Collider hullCollider;
 
     boatMove bm;
@@ -80,7 +85,7 @@ public class boatCombat : MonoBehaviour
     void Awake()
     {
         bm = GetComponent<boatMove>();
-        rMan = GameObject.Find("RoundManager").GetComponent<RespawnManager>();
+        rMan = GameObject.Find("RoundManager").GetComponent<RoundManager>();
 
         //Set stats and cannons based on class
         switch (shipClass)
@@ -225,8 +230,7 @@ public class boatCombat : MonoBehaviour
     {
         gameID = gameIDIn;
         team = teamIn;
-        //if(isPlayer || (team == playerTeam && team != 0))
-        if (isPlayer)
+        if(isPlayer || (team == rMan.playerTeam && team != 0))
         {
             cannonRangeMat = Resources.Load("SolidMaterials/white30", typeof(Material)) as Material;
             cannonRangeMatEmpty = Resources.Load("SolidMaterials/white5", typeof(Material)) as Material;
@@ -238,9 +242,20 @@ public class boatCombat : MonoBehaviour
         }
     }
 
-    public void TakeDamage(int damage, bool fire, bool chain)
+    public void TakeDamage(int damage, bool fire, bool chain, int shooterIDIn)
     {
         health -= damage;
+
+        //Updates latestDamageID and burnID if the damager isn't part of the environment (-1), self-harm (gameID) or a teammate (team stuff)
+        if (shooterIDIn != -1 && shooterIDIn != gameID &&
+            (rMan.shipStatuses[shooterIDIn].team != team || rMan.shipStatuses[shooterIDIn].team == 0))
+        {
+            latestDamageID = shooterIDIn;
+            if (fire)
+            {
+                latestFireID = shooterIDIn;
+            }
+        }
         if (health <= 0)
         {
             health = 0;
@@ -266,9 +281,22 @@ public class boatCombat : MonoBehaviour
         }
         else
         {
-            GameObject.Find("/RoundManager").GetComponent<RespawnManager>().ChangeClass(gameID, Random.Range(0, 4));
+            rMan.ChangeClass(gameID, Random.Range(0, 4));
         }
-        GameObject.Find("RoundManager").GetComponent<RespawnManager>().KillShip(gameID);
+        rMan.KillShip(gameID);
+
+        //If game mode is deathmatch, give a kill to whoever last damaged you
+        if (rMan.mode == 0)
+        {
+            if (latestDamageID != -1) //if this is still -1, literally no enemy ever touched you
+            {
+                rMan.ScoreIncSolo(latestDamageID);
+                if (rMan.teams)
+                {
+                    //increase correct team's score
+                }
+            }
+        }
         Destroy(this.gameObject);
     }
 
@@ -392,13 +420,13 @@ public class boatCombat : MonoBehaviour
             {
                 if (fireDuration >= fireDamageInterval * i && fireDamage == i-1)
                 {
-                    TakeDamage(1, false, false);
+                    TakeDamage(1, false, false, latestFireID);
                     fireDamage += 1;
                 }
             }
             if (fireDuration >= fireDamageInterval * fireDamageTotal && fireDamage == fireDamageTotal-1)
             {
-                TakeDamage(1, false, false);
+                TakeDamage(1, false, false, latestFireID);
                 onFire = false;
             }
         }
@@ -604,14 +632,13 @@ public class boatCombat : MonoBehaviour
         {
             if (goodAimR && (reloadR >= maxReload))
             {
-                //if(isPlayer || (team == playerTeam && team != 0))
-                if (isPlayer)
+                if(isPlayer || (team == rMan.playerTeam && team != 0))
                 {
-                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, true, selectedAmmo, hullCollider);
+                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, true, selectedAmmo, hullCollider, gameID);
                 }
                 else
                 {
-                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, false, selectedAmmo, hullCollider);
+                    cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, false, selectedAmmo, hullCollider, gameID);
                 }
 
                 if (selectedAmmo != 0)
@@ -631,8 +658,7 @@ public class boatCombat : MonoBehaviour
         {
             if (goodAimL && (reloadL >= maxReload))
             {
-                //if(isPlayer || (team == playerTeam && team != 0))
-                if (isPlayer)
+                if(isPlayer || (team == rMan.playerTeam && team != 0))
                 {
                     StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, true, selectedAmmo));
                 }
@@ -655,8 +681,7 @@ public class boatCombat : MonoBehaviour
             }
             else if (goodAimR && (reloadR >= maxReload))
             {
-                //if(isPlayer || (team == playerTeam && team != 0))
-                if (isPlayer)
+                if(isPlayer || (team == rMan.playerTeam && team != 0))
                 {
                     StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, true, selectedAmmo));
                 }
@@ -696,7 +721,7 @@ public class boatCombat : MonoBehaviour
         //fire broadside in order of volleyFireOrder
         for (int i = 0; i < volleyOrder.Length; i++)
         {
-            broadside[volleyOrder[i]].GetComponent<cannonShoot>().Shoot(40, 0.75f, isPlayer1, selectedAmmo1, hullCollider);
+            broadside[volleyOrder[i]].GetComponent<cannonShoot>().Shoot(40, 0.75f, isPlayer1, selectedAmmo1, hullCollider, gameID);
             yield return new WaitForSeconds(volleyFireRate);
         }
     }

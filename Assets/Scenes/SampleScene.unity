@@ -597,7 +597,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 724896809}
-  - component: {fileID: 724896808}
+  - component: {fileID: 724896810}
   m_Layer: 0
   m_Name: RoundManager
   m_TagString: Untagged
@@ -605,31 +605,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &724896808
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 724896807}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 223ed58bc953bf944b8d87927a191dc8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RespawnManager
-  playerStartingClass: 3
-  cutterP: {fileID: 2634757693801544768, guid: 2dea82cf029a37f499014c5e94bacb77, type: 3}
-  brigantineP: {fileID: 8866524959041813145, guid: a83465fa0158d2542a2b55cdd1c5c688, type: 3}
-  frigateP: {fileID: 6831111739710920888, guid: 220ca89c0d194374096290130c1ab59f, type: 3}
-  galleonP: {fileID: 6739390069246250174, guid: 7cc549ccd41db4e45a21ac6c39746770, type: 3}
-  cutterA: {fileID: 0}
-  brigantineA: {fileID: 0}
-  frigateA: {fileID: 0}
-  galleonA: {fileID: 0}
-  respawnTime: 10
-  lives: 0
-  maxLives: 1
-  ships: 32
 --- !u!4 &724896809
 Transform:
   m_ObjectHideFlags: 0
@@ -645,6 +620,45 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &724896810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 724896807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 223ed58bc953bf944b8d87927a191dc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoundManager
+  playerStartingClass: 1
+  cutterP: {fileID: 2634757693801544768, guid: 2dea82cf029a37f499014c5e94bacb77, type: 3}
+  brigantineP: {fileID: 8866524959041813145, guid: a83465fa0158d2542a2b55cdd1c5c688, type: 3}
+  frigateP: {fileID: 6831111739710920888, guid: 220ca89c0d194374096290130c1ab59f, type: 3}
+  galleonP: {fileID: 6739390069246250174, guid: 7cc549ccd41db4e45a21ac6c39746770, type: 3}
+  cutterA: {fileID: 7582978540162874562, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
+  brigantineA: {fileID: 8290476384731911194, guid: a0c82de0cf3bee44a9ceb4b41effa44a, type: 3}
+  frigateA: {fileID: 2869511465226909369, guid: 6c2b72f98e2a01f4c97e8be2f0a1e671, type: 3}
+  galleonA: {fileID: 7643532649246421002, guid: e131f69d456cf2445922b3f266cc8461, type: 3}
+  respawnTime: 10
+  lives: 0
+  maxLives: 1
+  totalShips: 32
+  teams: 0
+  playerTeam: 0
+  spawnImmunityTime: 5
+  spawns0:
+  - {fileID: 1084567009}
+  - {fileID: 1150702591}
+  - {fileID: 2143306928}
+  - {fileID: 1577407680}
+  spawns1: []
+  spawns2: []
+  mode: 0
+  scoresSolo: 
+  scoresTeam: 
+  scoreTarget: 50
 --- !u!1 &791416512
 GameObject:
   m_ObjectHideFlags: 0
@@ -1005,6 +1019,68 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1084567008
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1084567009}
+  m_Layer: 0
+  m_Name: spawn0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1084567009
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084567008}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.2588191, z: 0, w: 0.9659258}
+  m_LocalPosition: {x: -30, y: 0, z: -20}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1836923230}
+  m_LocalEulerAnglesHint: {x: 0, y: 30, z: 0}
+--- !u!1 &1150702590
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1150702591}
+  m_Layer: 0
+  m_Name: spawn0 (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1150702591
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1150702590}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.08715578, z: 0, w: 0.9961947}
+  m_LocalPosition: {x: -10, y: 0, z: -20}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1836923230}
+  m_LocalEulerAnglesHint: {x: 0, y: 10, z: 0}
 --- !u!1 &1231353248
 GameObject:
   m_ObjectHideFlags: 0
@@ -1176,6 +1252,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1292971074}
   m_CullTransparentMesh: 1
+--- !u!1 &1577407679
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1577407680}
+  m_Layer: 0
+  m_Name: spawn0 (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1577407680
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577407679}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.258819, z: 0, w: 0.9659259}
+  m_LocalPosition: {x: 30, y: 0, z: -20}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1836923230}
+  m_LocalEulerAnglesHint: {x: 0, y: -30, z: 0}
 --- !u!1001 &1578583769
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1455,6 +1562,41 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 10, z: 0}
+--- !u!1 &1836923229
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1836923230}
+  m_Layer: 0
+  m_Name: Spawns0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1836923230
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1836923229}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1084567009}
+  - {fileID: 1150702591}
+  - {fileID: 2143306928}
+  - {fileID: 1577407680}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1969539300
 GameObject:
   m_ObjectHideFlags: 0
@@ -1591,6 +1733,37 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2143306927
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2143306928}
+  m_Layer: 0
+  m_Name: spawn0 (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2143306928
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2143306927}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.08715578, z: 0, w: 0.9961947}
+  m_LocalPosition: {x: 10, y: 0, z: -20}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1836923230}
+  m_LocalEulerAnglesHint: {x: 0, y: -10, z: 0}
 --- !u!1001 &9185715569850713783
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1663,3 +1836,4 @@ SceneRoots:
   - {fileID: 923532497}
   - {fileID: 375272973}
   - {fileID: 724896809}
+  - {fileID: 1836923230}

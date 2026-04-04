@@ -11,6 +11,7 @@ public class cannonballMove : MonoBehaviour
     bool chain, fire, pierce;
 
     Collider ignore;
+    int shooterID;
 
     float tss;
     Vector3 ballHeight = new Vector3(0f,0f,0f);
@@ -27,13 +28,14 @@ public class cannonballMove : MonoBehaviour
     }
 
     //With ammo type
-    public void Init(float speedIn, float durationIn, float startHeightIn, bool friendlyIn, int typeIn, Collider ignoreIn)
+    public void Init(float speedIn, float durationIn, float startHeightIn, bool friendlyIn, int typeIn, Collider ignoreIn, int shooterIDIn)
     {
         speed = speedIn;
         duration = durationIn;
         startHeight = startHeightIn;
         friendly = friendlyIn;
         ignore = ignoreIn;
+        shooterID = shooterIDIn;
         if (friendly)
         {
             outline.GetComponent<Renderer>().material = whiteSolid;
@@ -72,7 +74,7 @@ public class cannonballMove : MonoBehaviour
             if (collision.gameObject.layer == 7)
             {
                 //Debug.Log(DateTime.Now + "    " + collision.transform.parent.gameObject.name);
-                collision.transform.parent.GetComponent<boatCombat>().TakeDamage(1, fire, chain);
+                collision.transform.parent.GetComponent<boatCombat>().TakeDamage(1, fire, chain, shooterID);
                 if (!pierce)
                 {
                     Destroy(this.gameObject);

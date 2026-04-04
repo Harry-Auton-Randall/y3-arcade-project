@@ -15,7 +15,7 @@ public class cannonShoot : MonoBehaviour
     {
         model = transform.Find("model");
     }
-    public void Shoot(float speedIn, float durationIn, bool friendlyIn, int typeIn, Collider ignoreIn)
+    public void Shoot(float speedIn, float durationIn, bool friendlyIn, int typeIn, Collider ignoreIn, int shooterIDIn)
     {
         switch (typeIn)
         {
@@ -26,7 +26,7 @@ public class cannonShoot : MonoBehaviour
                 instStartPos.y = 0;
                 instance.transform.position = instStartPos;
                 instance.transform.position += transform.forward * 0.5f;
-                instance.GetComponent<cannonballMove>().Init(speedIn, durationIn, transform.position.y + 0.23f, friendlyIn, typeIn, ignoreIn);
+                instance.GetComponent<cannonballMove>().Init(speedIn, durationIn, transform.position.y + 0.23f, friendlyIn, typeIn, ignoreIn, shooterIDIn);
                 break;
         }
         recoil = modelPos.z - 0.1f;

@@ -6,7 +6,7 @@ public class DeathScreen : MonoBehaviour
     Camera deathCam;
     Canvas deathCan;
     Text sunkT, respawningT;
-    RespawnManager rm;
+    RoundManager rm;
     public int respawnTime;
     float zoomOutTime, zoomOut;
     Vector3 initialPos;
@@ -18,7 +18,7 @@ public class DeathScreen : MonoBehaviour
         deathCan = transform.Find("deathCanvas").GetComponent<Canvas>();
         sunkT = transform.Find("deathCanvas/sunkText").GetComponent<Text>();
         respawningT = transform.Find("deathCanvas/respawningText").GetComponent<Text>();
-        rm = GameObject.Find("/RoundManager").GetComponent<RespawnManager>();
+        rm = GameObject.Find("/RoundManager").GetComponent<RoundManager>();
     }
 
     public void Enable(int idIn, Transform camPosition)

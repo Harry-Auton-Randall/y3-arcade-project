@@ -1,13 +1,13 @@
 using UnityEngine;
 
-public class RespawnManager : MonoBehaviour
+public class RoundManager : MonoBehaviour
 {
     //temporary
     public int playerStartingClass;
 
+    //SPAWNING STUFF
     public GameObject cutterP, brigantineP, frigateP, galleonP;
     public GameObject cutterA, brigantineA, frigateA, galleonA;
-
 
     GameObject instance;
 
@@ -16,22 +16,92 @@ public class RespawnManager : MonoBehaviour
     public float respawnTime = 10f;
     public bool lives = false;
     public int maxLives = 1;
-    public int ships = 32;
+    public int totalShips = 32;
+    
+    public bool teams = false;
+    public int playerTeam;
+
+    public float spawnImmunityTime = 5f;
+
+    public Transform[] spawns0, spawns1, spawns2;
+    Transform temp;
+    int position;
+
     public ShipInfo[] shipStatuses;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+
+    //GAME MODE STUFF
+    public int mode = 0;
+    public int[] scoresSolo;
+    public int[] scoresTeam;
+    public int scoreTarget = 50;
+
     void Awake()
     {
+        //TEMPORARY
+        teams = false;
+        mode = 0;
+
         ds = GameObject.Find("/deathScreen").GetComponent<DeathScreen>();
-        shipStatuses = new ShipInfo[] { new ShipInfo(true, 0, playerStartingClass) };
+
+        //SHUFFLE SPAWN LOCATION ARRAYS, FOR RANDOMISED SPAWN LOCATIONS
+        SpawnShuffle(spawns0);
+        SpawnShuffle(spawns1);
+        SpawnShuffle(spawns2);
+
+        if (teams)
+        {
+        }
+        else
+        {
+            playerTeam = 0;
+            totalShips = Mathf.Clamp(totalShips, 2, spawns0.Length);
+
+            shipStatuses = new ShipInfo[totalShips];
+            shipStatuses[0] = new ShipInfo(true, playerTeam, playerStartingClass);
+            for (int i=1;i<totalShips;i++)
+            {
+                shipStatuses[i] = new ShipInfo(false, 0, Random.Range(0, 4));
+            }
+        }
+
+        //shipStatuses = new ShipInfo[] { new ShipInfo(true, 0, playerStartingClass) };
+        scoresSolo = new int[shipStatuses.Length];
+        if (teams)
+        {
+            scoresTeam = new int[] { 0, 0 };
+        }
         for (int i = 0; i < shipStatuses.Length; i++)
         {
             shipStatuses[i].SetLives(maxLives);
             shipStatuses[i].SetRespawn(0f);
-            SpawnShip(i);
+            scoresSolo[i] = 0;
+        }
+    }
+    void Start()
+    {
+        if (teams)
+        {
+        }
+        else
+        {
+            for (int i = 0; i < shipStatuses.Length; i++)
+            {
+                SpawnShip(i, spawns0[i]);
+            }
         }
     }
 
-    // Update is called once per frame
+    void SpawnShuffle(Transform[] spawns)
+    {
+        for (int i = 0; i < spawns.Length; i++)
+        {
+            position = Random.Range(i, spawns.Length);
+            temp = spawns[i];
+            spawns[i] = spawns[position];
+            spawns[position] = temp;
+        }
+    }
+
     void Update()
     {
         for (int i=0;i<shipStatuses.Length;i++)
@@ -43,13 +113,24 @@ public class RespawnManager : MonoBehaviour
                 {
                     shipStatuses[i].respawnProgress = 0f;
                     shipStatuses[i].isAlive = true;
-                    SpawnShip(i);
+                    switch (shipStatuses[i].team)
+                    {
+                        case 0:
+                            SpawnShip(i, spawns0[Random.Range(0, spawns0.Length)]);
+                            break;
+                        case 1:
+                            SpawnShip(i, spawns1[Random.Range(0, spawns1.Length)]);
+                            break;
+                        case 2:
+                            SpawnShip(i, spawns2[Random.Range(0, spawns2.Length)]);
+                            break;
+                    }
                 }
             }
         }
     }
 
-    void SpawnShip(int id)
+    void SpawnShip(int id, Transform spawnPos)
     {
         if (shipStatuses[id].isPlayer)
         {
@@ -93,12 +174,21 @@ public class RespawnManager : MonoBehaviour
         }
 
         instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team, id);
+        instance.transform.position = spawnPos.position;
+        instance.transform.rotation = spawnPos.rotation;
+
     }
 
     public void KillShip(int id)
     {
         shipStatuses[id].RegisterKill(respawnTime, lives);
     }
+
+    public void ScoreIncSolo(int id)
+    {
+        scoresSolo[id] += 1;
+    }
+
     public void ChangeClass(int id, int classIn)
     {
         shipStatuses[id].SetClass(classIn);
