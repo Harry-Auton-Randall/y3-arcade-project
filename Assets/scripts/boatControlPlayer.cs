@@ -9,7 +9,7 @@ public class boatControlPlayer : MonoBehaviour
     MeshCollider zeroPlane;
     Transform reticle;
     RaycastHit hit;
-    public LayerMask oceanLayer;
+    LayerMask oceanLayer;
     Ray ray;
     camControl cc;
     Slider reticleCircle;
@@ -63,7 +63,7 @@ public class boatControlPlayer : MonoBehaviour
         spyglassOutline = transform.Find("spyglassCanvas/Image").GetComponent<RectTransform>();
         spyglassOutlineImage = transform.Find("spyglassCanvas/Image").GetComponent<Image>();
 
-        oceanLayer |= (1 << 6);
+        oceanLayer = (1 << LayerMask.NameToLayer("ocean"));
 
     }
     void Start()

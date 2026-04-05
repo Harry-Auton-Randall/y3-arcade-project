@@ -67,8 +67,8 @@ public class cannonballMove : MonoBehaviour
 
     void OnTriggerEnter(Collider collision)
     {
-        //Ignores the boat that shot it, and rams
-        if ((collision != ignore) && !(collision.CompareTag("Ram")))
+        //Ignores the boat that shot it
+        if (collision != ignore)
         {
             //boat hit
             if (collision.gameObject.layer == 7)

@@ -1003,11 +1003,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4283740713080330321, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: -4283740713080330321, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}
       propertyPath: m_TagString
-      value: Ram
+      value: Untagged
       objectReference: {fileID: 0}
     - target: {fileID: -2164414945639753869, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}
       propertyPath: m_Layer
@@ -1212,6 +1212,7 @@ MonoBehaviour:
   reloadProgress: 0
   cannonRangeMat: {fileID: 0}
   cannonRangeMatEmpty: {fileID: 0}
+  volleyFireRate: 0
   repairProgress: 0
   isRepairing: 0
   fireDamageInterval: 5
