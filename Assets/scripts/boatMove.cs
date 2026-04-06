@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class boatMove : MonoBehaviour
 {
     //public PlayerInput pi;
-    Rigidbody rb;
+    public Rigidbody rb;
     float speed;
     float rotate;
     float movementIn;

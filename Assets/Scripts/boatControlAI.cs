@@ -39,6 +39,9 @@ public class boatControlAI : MonoBehaviour
 
     float moveIn, steerIn;
 
+    bool stopAtTarget;
+    bool aimingAtTargetPoi; //specifically for rotating ships to aim cannons at their targetPOI, if relevant
+
     void Awake()
     {
         poiMask = (1 << LayerMask.NameToLayer("boat"));
@@ -92,7 +95,7 @@ public class boatControlAI : MonoBehaviour
                 //Currently only supports enemyShip POIs
                 if ((bc.team != poiBC.team) || (bc.team == 0))
                 {
-                    poiInfos[colliderToPoi].Set(PoiInfo.Types.EnemyShip, poiBoat.transform.position, this.transform.position);
+                    poiInfos[colliderToPoi].Set(PoiInfo.Types.EnemyBoat, poiBoat.transform.position, this.transform.position);
 
                     poiObjects[colliderToPoi] = poiBoat;
 
@@ -103,7 +106,7 @@ public class boatControlAI : MonoBehaviour
         //adds objective POIs to poiInfos
         for (int i = 0; i < objectiveWaypoints.Length; i++)
         {
-            poiInfos[colliderToPoi].Set(PoiInfo.Types.Objective, objectiveWaypoints[i], this.transform.position);
+            poiInfos[colliderToPoi].Set(PoiInfo.Types.ObjectivePoint, objectiveWaypoints[i], this.transform.position);
             if (bc.rMan.mode == 0)
             {
                 poiInfos[colliderToPoi].priority = -10; //if deathmatch, sets objective priority extra low (should only go here if there are no other POIs)
@@ -198,18 +201,121 @@ public class boatControlAI : MonoBehaviour
     {
         FindPois(); //keep at the top of Update
 
+        //MOVEMENT
+
         //gets global/local positions + angle of targetPOI's location
         targetWaypoint = poiInfos[targetPoi].globalPos;
         targetWaypointLocal = transform.InverseTransformPoint(targetWaypoint);
         targetWaypointLocal.y = 0;
         targetWaypointAngle = Vector3.SignedAngle(Vector3.forward, targetWaypointLocal, Vector3.up);
 
+        //set stopAtTarget, depending on waypoint type
+        if (poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectivePoint ||
+            poiInfos[targetPoi].poiType == PoiInfo.Types.DyingAlly ||
+            poiInfos[targetPoi].poiType == PoiInfo.Types.DyingEnemy)
+        {
+            stopAtTarget = true;
+        }
+        else
+        {
+            stopAtTarget = false;
+        }
 
-        //point towards target waypoint
-        steerIn = RotateBoat(targetWaypointAngle);
+        //sets aimingAtTargetPOI, depending on targetPOI type + distance, + this ship class
+        //aimingAtTargetPOI means the ship is positioning itself to fire upon its targetPOI
+        if (poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectiveBoat ||
+            poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
+            poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort)
+        {
+            //Most ships aim their guns if within 30m, cutters get in further, then turn around
+
+            if (bc.shipClass == boatCombat.Classes.Cutter)
+            {
+                if (poiInfos[targetPoi].dist <= 20 || (Mathf.Abs(targetWaypointAngle) >= 90 && poiInfos[targetPoi].dist <= 30))
+                {
+                    aimingAtTargetPoi = true;
+                }
+                else { aimingAtTargetPoi = false; }
+            }
+            else
+            {
+                if (poiInfos[targetPoi].dist <= 30)
+                {
+                    aimingAtTargetPoi = true;
+                }
+                else { aimingAtTargetPoi = false; }
+            }
+        }
+        else
+        {
+            aimingAtTargetPoi = false;
+        }
+
+        //Sorts out movement and steering - acts differently depending on aimingAtTargetPOI
+
+        if (!aimingAtTargetPoi)
+        {
+            //NOT aimingAtTargetPOI - paths towards its target waypoint
+
+            //point towards target waypoint
+            //Doesnt bother if stopAtTarget is enabled AND the target is close enough
+            if (!(stopAtTarget && poiInfos[targetPoi].dist < 5))
+            {
+                steerIn = RotateBoat(targetWaypointAngle);
+            }
+            else
+            {
+                steerIn = 0;
+            }
+
+            //set moveIn
+            //sets to 0 if the target is >45deg away OR
+            //(stopAtTarget enabled AND EITHER the target is close enough, OR its moving fast enough to reach the target just by coasting)
+            if (Mathf.Abs(targetWaypointAngle) > 45 ||
+                (stopAtTarget && (poiInfos[targetPoi].dist < 5 || (bm.outSpd / bm.rb.linearDamping >= poiInfos[targetPoi].dist))))
+            {
+                moveIn = 0;
+            }
+            else
+            {
+                moveIn = 1;
+            }
+        }
+        else
+        {
+            //aimingAtTargetPOI - max moveIn, rotates its closest cannons towards the target waypoint
+
+            //point guns towards target waypoint - recalculates targetWaypointAngle to do so
+            if (bc.shipClass == boatCombat.Classes.Cutter)
+            {
+                targetWaypointAngle = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
+            }
+            else
+            {
+                //figures out if the left or right broadside is closer
+                if (targetWaypointAngle < 0)
+                {
+                    targetWaypointAngle = Vector3.SignedAngle(Vector3.right * -1, targetWaypointLocal, Vector3.up);
+                }
+                else
+                {
+                    targetWaypointAngle = Vector3.SignedAngle(Vector3.right, targetWaypointLocal, Vector3.up);
+                }
+            }
+            steerIn = RotateBoat(targetWaypointAngle);
+
+            moveIn = 1;
+        }
+
+
+        bm.SetMovementIn(moveIn);
         bm.SetRotationIn(steerIn);
     }
 }
+
+
+
+
 
 public class PoiInfo
 {
@@ -217,20 +323,20 @@ public class PoiInfo
     public int priority;
     public Vector3 globalPos;
     public float dist;
-    public enum Types {Objective, EnemyShip, EnemyFort, DyingAlly, DyingEnemy};
+    public enum Types {ObjectivePoint, ObjectiveBoat, EnemyBoat, EnemyFort, DyingAlly, DyingEnemy, ResourcePickup};
     public Types poiType;
 
-    public float poiDist;
+    public float poiMaxDist;
 
-    public PoiInfo(float poiDistIn)
+    public PoiInfo(float poiMaxDistIn)
     {
         Reset();
         priority = 0;
         globalPos = Vector3.zero;
         dist = 0;
-        poiType = Types.Objective;
+        poiType = Types.ObjectivePoint;
 
-        poiDist = poiDistIn;
+        poiMaxDist = poiMaxDistIn;
     }
     public void Reset()
     {
@@ -247,12 +353,16 @@ public class PoiInfo
         //handles different priorities for different types/distances
         switch (poiType)
         {
-            case Types.Objective:
-                if (dist <= poiDist) { priority = 1; }
+            case Types.ObjectivePoint:
+                if (dist <= poiMaxDist) { priority = 1; }
+                else { priority = 0; }
+                break;
+            case Types.ObjectiveBoat:
+                if (dist <= poiMaxDist) { priority = 1; }
                 else { priority = 0; }
                 break;
 
-            case Types.EnemyShip:
+            case Types.EnemyBoat:
                 priority = 0;
                 break;
 
