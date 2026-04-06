@@ -9,24 +9,33 @@ public class boatControlAI : MonoBehaviour
     boatMove bm;
     boatCombat bc;
 
+    //POI-finding
+    LayerMask poiMask;
+
     Vector3[] objectiveWaypoints;
     Collider[] nearbyPois;
     PoiInfo[] poiInfos;
-    int colliderToPoi;
     float poiRadius = 150f;
+
     int nearbyPoiCount;
+    int colliderToPoi;
+
+    GameObject poiBoat;
+    boatCombat poiBC;
 
     int highestPriorityPoi;
     float closestPoi;
+
+    //for tracking the gameObject of a POI (for debugging)
+    GameObject previousPoi;
+    GameObject[] poiObjects;
 
     int targetPoi;
     Vector3 targetWaypoint, targetWaypointLocal;
     float targetWaypointAngle;
 
-    GameObject poiBoat;
-    boatCombat poiBC;
-
-    LayerMask poiMask;
+    //used by RotateBoat
+    float steerThreshold = 10;
 
     float moveIn, steerIn;
 
@@ -41,24 +50,29 @@ public class boatControlAI : MonoBehaviour
         //sets objectiveWaypoints based on mode
         if (bc.rMan.mode == 0)
         {
-            objectiveWaypoints = new Vector3[] { new Vector3(200, 0, 0) }; //TEMPORARY
+            objectiveWaypoints = new Vector3[] { new Vector3(0, 0, 0) }; //TEMPORARY
         }
 
         //initialises nearbyPOIs and poiInfo
-        nearbyPois = new Collider[bc.rMan.totalShips];
+
+        //nearbyPois = new Collider[bc.rMan.totalShips];
+        nearbyPois = new Collider[bc.rMan.totalShips + 10]; //TEMPORARY - while AIs aren't spawned by RoundManager and instead placed manually
+
         poiInfos = new PoiInfo[nearbyPois.Length + objectiveWaypoints.Length];
         for (int i=0;i<poiInfos.Length;i++)
         {
             poiInfos[i] = new PoiInfo(poiRadius);
         }
+
+        poiObjects = new GameObject[poiInfos.Length];
     }
 
-    void Update()
+
+    //Finds all POIs within poiRadius (should be 150m), pick one based on priority + distance
+    void FindPois()
     {
-        //FINDING NEARBY POIS AND SORTING THEIR INFO OUT
-        
         //finds every boat within poiRadius
-        for (int i=0;i<nearbyPois.Length;i++)
+        for (int i = 0; i < nearbyPois.Length; i++)
         {
             nearbyPois[i] = default;
         }
@@ -66,7 +80,7 @@ public class boatControlAI : MonoBehaviour
 
         //determines if each boat found is a valid POI, adds to poiInfos if so
         colliderToPoi = 0;
-        for (int i=0;i<nearbyPoiCount;i++)
+        for (int i = 0; i < nearbyPoiCount; i++)
         {
             poiBoat = nearbyPois[i].transform.parent.gameObject;
 
@@ -79,19 +93,29 @@ public class boatControlAI : MonoBehaviour
                 if ((bc.team != poiBC.team) || (bc.team == 0))
                 {
                     poiInfos[colliderToPoi].Set(PoiInfo.Types.EnemyShip, poiBoat.transform.position, this.transform.position);
+
+                    poiObjects[colliderToPoi] = poiBoat;
+
                     colliderToPoi++;
                 }
             }
         }
         //adds objective POIs to poiInfos
-        for (int i=0;i<objectiveWaypoints.Length;i++)
+        for (int i = 0; i < objectiveWaypoints.Length; i++)
         {
             poiInfos[colliderToPoi].Set(PoiInfo.Types.Objective, objectiveWaypoints[i], this.transform.position);
+            if (bc.rMan.mode == 0)
+            {
+                poiInfos[colliderToPoi].priority = -10; //if deathmatch, sets objective priority extra low (should only go here if there are no other POIs)
+            }
+
+            poiObjects[colliderToPoi] = GameObject.Find("/sun");
+
             colliderToPoi++;
         }
 
         //disable all remaining PoiInfos
-        for (int i = colliderToPoi; i<poiInfos.Length;i++)
+        for (int i = colliderToPoi; i < poiInfos.Length; i++)
         {
             poiInfos[i].Reset();
         }
@@ -113,7 +137,7 @@ public class boatControlAI : MonoBehaviour
 
         //Finds highest-priority POIs, then finds the closest one
         highestPriorityPoi = -999;
-        for (int i=0;i<colliderToPoi;i++)
+        for (int i = 0; i < colliderToPoi; i++)
         {
             if (poiInfos[i].priority > highestPriorityPoi) { highestPriorityPoi = poiInfos[i].priority; }
         }
@@ -128,8 +152,62 @@ public class boatControlAI : MonoBehaviour
             }
         }
 
+        //TEMPORARY - logs if the targetPoi changes - uses poiObject, because the order of poiInfos is volatile
+        if (previousPoi != poiObjects[targetPoi])
+        {
+            Debug.Log("Target changed from " + previousPoi + " to " + poiObjects[targetPoi]);
+            previousPoi = poiObjects[targetPoi];
+        }
+    }
+
+    //Handles rotating the boat
+    float RotateBoat(float angle)
+    {
+        angle = angle * -1;
+
+        //Apply full steering if angle is too much (uses steerThreshold)
+        if (angle < steerThreshold * -1)
+        {
+            return 1;
+        }
+        else if (angle > steerThreshold)
+        {
+            return -1;
+        }
+        //when angle is lower
+        else
+        {
+            //if angle is getting further away from 0, apply full steering to counter
+            if (angle <= 0 && bm.outRotSpd < 0)
+            {
+                return 1;
+            }
+            else if (angle >= 0 && bm.outRotSpd > 0)
+            {
+                return -1;
+            }
+            //softer steering to avoid overshooting
+            else
+            {
+                return angle / steerThreshold;
+            }
+        }
+    }
+
+    void Update()
+    {
+        FindPois(); //keep at the top of Update
+
+        //gets global/local positions + angle of targetPOI's location
         targetWaypoint = poiInfos[targetPoi].globalPos;
         targetWaypointLocal = transform.InverseTransformPoint(targetWaypoint);
+        targetWaypointLocal.y = 0;
+        targetWaypointAngle = Vector3.SignedAngle(Vector3.forward, targetWaypointLocal, Vector3.up);
+
+
+        //point towards target waypoint
+        steerIn = RotateBoat(targetWaypointAngle);
+        bm.SetRotationIn(steerIn);
     }
 }
 
@@ -166,7 +244,7 @@ public class PoiInfo
         globalPos = globalPosIn;
         dist = Vector3.Distance(thisPosIn, globalPos);
 
-        //handles different 
+        //handles different priorities for different types/distances
         switch (poiType)
         {
             case Types.Objective:
