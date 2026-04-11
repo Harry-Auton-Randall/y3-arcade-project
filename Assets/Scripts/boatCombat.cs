@@ -47,21 +47,22 @@ public class boatCombat : MonoBehaviour
 
     //cannons
     GameObject[] cannonsL, cannonsR;
-    Vector2 cannonCentreL = Vector2.zero;
-    Vector2 cannonCentreR = Vector2.zero;
+    public Vector2 cannonCentreL = Vector2.zero;
+    public Vector2 cannonCentreR = Vector2.zero;
 
-    Vector2 cannonCentreL2 = Vector2.zero; //frigates and galleons
-    Vector2 cannonCentreR2 = Vector2.zero;
+    public Vector2 cannonCentreL2 = Vector2.zero; //frigates and galleons
+    public Vector2 cannonCentreR2 = Vector2.zero;
     float cannonXDist;
 
     Renderer cannonRangeL, cannonRangeR, cannonRangeL2, cannonRangeR2;//Cutter uses cannonRangeR, Brigantine uses all 4
     public Material cannonRangeMat, cannonRangeMatEmpty;
     Transform cannonRangeBoneL, cannonRangeBoneR, cannonRangeBoneL2, cannonRangeBoneR2;//for Frigates and Galleons
-    bool goodAimL, goodAimR;
+    public bool goodAimL, goodAimR;
     Vector3 cannonRangeDefaultRot; //for frigates and galleons, because bones imported from Blender have weird rotations
 
     public float volleyFireRate;
     int[] volleyFireOrderL, volleyFireOrderR;
+    public int volleying = 0;
 
     //repairing
     public float repairProgress;
@@ -84,6 +85,8 @@ public class boatCombat : MonoBehaviour
 
     void Awake()
     {
+        volleying = 0;
+
         bm = GetComponent<boatMove>();
         rMan = GameObject.Find("RoundManager").GetComponent<RoundManager>();
 
@@ -661,10 +664,12 @@ public class boatCombat : MonoBehaviour
                 if(isPlayer || (team == rMan.playerTeam && team != 0))
                 {
                     StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, true, selectedAmmo));
+                    volleying++;
                 }
                 else
                 {
                     StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, false, selectedAmmo));
+                    volleying++;
                 }
 
                 if (selectedAmmo != 0)
@@ -684,10 +689,12 @@ public class boatCombat : MonoBehaviour
                 if(isPlayer || (team == rMan.playerTeam && team != 0))
                 {
                     StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, true, selectedAmmo));
+                    volleying++;
                 }
                 else
                 {
                     StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, false, selectedAmmo));
+                    volleying++;
                 }
 
                 if (selectedAmmo != 0)
@@ -724,5 +731,6 @@ public class boatCombat : MonoBehaviour
             broadside[volleyOrder[i]].GetComponent<cannonShoot>().Shoot(40, 0.75f, isPlayer1, selectedAmmo1, hullCollider, gameID);
             yield return new WaitForSeconds(volleyFireRate);
         }
+        volleying--;
     }
 }

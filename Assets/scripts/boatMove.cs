@@ -11,6 +11,7 @@ public class boatMove : MonoBehaviour
     float rotationIn;
 
     public float outSpd, outGlbSpd, outRotSpd;
+    public Vector3 globalMoveDir, localMoveDir;
 
     void Awake()
     {
@@ -52,5 +53,10 @@ public class boatMove : MonoBehaviour
         outSpd = Vector3.Dot(transform.forward, rb.linearVelocity);
         outGlbSpd = rb.linearVelocity.magnitude;
         outRotSpd = rb.angularVelocity.y * Mathf.Rad2Deg;
+
+        globalMoveDir = rb.linearVelocity;
+        localMoveDir = transform.InverseTransformDirection(globalMoveDir);
+        globalMoveDir.y = 0;
+        localMoveDir.y = 0;
     }
 }

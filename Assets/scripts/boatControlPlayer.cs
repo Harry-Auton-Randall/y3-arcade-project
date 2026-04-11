@@ -197,6 +197,7 @@ public class boatControlPlayer : MonoBehaviour
             }
         }
         reticle.transform.rotation = Quaternion.Euler(0,cc.cameraRotYGrad,0);
+        bc.rMan.playerReticleRotation = reticle.transform.rotation; //duplicate reticle's rotation to all other reticles
         reticleCircle.value = bc.reloadProgress;
 
         //Spyglass canvas stuff

@@ -637,10 +637,10 @@ MonoBehaviour:
   brigantineP: {fileID: 8866524959041813145, guid: a83465fa0158d2542a2b55cdd1c5c688, type: 3}
   frigateP: {fileID: 6831111739710920888, guid: 220ca89c0d194374096290130c1ab59f, type: 3}
   galleonP: {fileID: 6739390069246250174, guid: 7cc549ccd41db4e45a21ac6c39746770, type: 3}
-  cutterA: {fileID: 7582978540162874562, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-  brigantineA: {fileID: 8290476384731911194, guid: a0c82de0cf3bee44a9ceb4b41effa44a, type: 3}
-  frigateA: {fileID: 2869511465226909369, guid: 6c2b72f98e2a01f4c97e8be2f0a1e671, type: 3}
-  galleonA: {fileID: 7643532649246421002, guid: e131f69d456cf2445922b3f266cc8461, type: 3}
+  cutterA: {fileID: 5282660433296227109, guid: d622cba39e45cb84ebf7671ed2a1412c, type: 3}
+  brigantineA: {fileID: 5675262026470004130, guid: 63aa0228a94231f48afc3e85dc4cab33, type: 3}
+  frigateA: {fileID: 5919560032276849124, guid: 06d7bc1852de5934ea44aa8081e4d11b, type: 3}
+  galleonA: {fileID: 4221764355320404644, guid: 777488e4ce667a745874996e807c7e6f, type: 3}
   respawnTime: 10
   lives: 0
   maxLives: 1
@@ -659,6 +659,7 @@ MonoBehaviour:
   scoresSolo: 
   scoresTeam: 
   scoreTarget: 50
+  playerReticleRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &791416512
 GameObject:
   m_ObjectHideFlags: 0
@@ -934,7 +935,7 @@ Transform:
   m_GameObject: {fileID: 899218213}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -1, z: 50}
+  m_LocalPosition: {x: 0, y: -1, z: 500}
   m_LocalScale: {x: 40, y: 10, z: 20}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1081,23 +1082,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1836923230}
   m_LocalEulerAnglesHint: {x: 0, y: 10, z: 0}
---- !u!1 &1225741898 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7582978540162874562, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-  m_PrefabInstance: {fileID: 1778099265}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1225741903
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1225741898}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e479d0baa580db47a3f900d148f8c4f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::boatControlAI
 --- !u!1 &1231353248
 GameObject:
   m_ObjectHideFlags: 0
@@ -1452,74 +1436,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1778099265
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 6271003948878205088, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6271003948878205088, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7095410642124875384, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7582978540162874562, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      propertyPath: m_Name
-      value: cutterAI
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7582978540162874562, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1225741903}
-  m_SourcePrefab: {fileID: 100100000, guid: 1a6bdf7ae70b2cb41bed3523b6a6154d, type: 3}
 --- !u!1 &1803397368
 GameObject:
   m_ObjectHideFlags: 0
@@ -1922,4 +1838,3 @@ SceneRoots:
   - {fileID: 375272973}
   - {fileID: 724896809}
   - {fileID: 1836923230}
-  - {fileID: 1778099265}

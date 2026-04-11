@@ -24,7 +24,7 @@ public class boatControlAI : MonoBehaviour
     boatCombat poiBC;
 
     int highestPriorityPoi;
-    float closestPoi;
+    float closestPoi, closestShootablePoi;
 
     //for tracking the gameObject of a POI (for debugging)
     GameObject previousPoi;
@@ -33,9 +33,24 @@ public class boatControlAI : MonoBehaviour
     int targetPoi;
     Vector3 targetWaypoint, targetWaypointLocal;
     float targetWaypointAngle;
+    float targetWaypointAngleAiming;
+    float targetWaypointAngleCircleAdj;
+    float targetWaypointAimCircleRadius;
+
+    int shootablePoi;
+    Vector3 shootableWaypoint, shootableWaypointVel;
+
+    int cannonballSpeed = 40;
+    bool anythingToShoot;
+    Vector3 cannonCentreL, cannonCentreR;
+    float shootableCannonCentreDist;
+
+    float shootDelay = 0.75f;
+    float timeAiming;
+    bool isAiming;
 
     //used by RotateBoat
-    float steerThreshold = 10;
+    float steerThreshold = 5;
 
     float moveIn, steerIn;
 
@@ -47,13 +62,40 @@ public class boatControlAI : MonoBehaviour
         poiMask = (1 << LayerMask.NameToLayer("boat"));
         bm = GetComponent<boatMove>();
         bc = GetComponent<boatCombat>();
+
+        reticle = transform.Find("reticle");
+        reticleCircle = transform.Find("reticle/reticleCanvas/Slider").GetComponent<Slider>();
     }
     void Start()
     {
+        //sets cannonCentres based on class
+        switch (bc.shipClass)
+        {
+            case boatCombat.Classes.Cutter:
+                cannonCentreR = new Vector3(bc.cannonCentreR.x, 0, bc.cannonCentreR.y);
+                break;
+            case boatCombat.Classes.Brigantine:
+                cannonCentreL = new Vector3(-0.75f, 0, 0);
+                cannonCentreR = new Vector3(0.75f, 0, 0);
+                break;
+            default:
+                cannonCentreL = new Vector3(bc.cannonCentreL2.x, 0, bc.cannonCentreL2.y);
+                cannonCentreR = new Vector3(bc.cannonCentreR2.x, 0, bc.cannonCentreR2.y);
+                break;
+        }
+
         //sets objectiveWaypoints based on mode
         if (bc.rMan.mode == 0)
         {
             objectiveWaypoints = new Vector3[] { new Vector3(0, 0, 0) }; //TEMPORARY
+        }
+        if (bc.shipClass == boatCombat.Classes.Cutter)
+        {
+            targetWaypointAimCircleRadius = 15;
+        }
+        else
+        {
+            targetWaypointAimCircleRadius = 25;
         }
 
         //initialises nearbyPOIs and poiInfo
@@ -139,6 +181,7 @@ public class boatControlAI : MonoBehaviour
         //}
 
         //Finds highest-priority POIs, then finds the closest one
+        //Also finds the closest shootable POI - ignores priority, just uses distance
         highestPriorityPoi = -999;
         for (int i = 0; i < colliderToPoi; i++)
         {
@@ -146,12 +189,24 @@ public class boatControlAI : MonoBehaviour
         }
 
         closestPoi = Mathf.Infinity;
+        closestShootablePoi = Mathf.Infinity;
+        anythingToShoot = false;
         for (int i = 0; i < colliderToPoi; i++)
         {
             if ((poiInfos[i].dist < closestPoi) && (poiInfos[i].priority == highestPriorityPoi))
             {
                 targetPoi = i;
                 closestPoi = poiInfos[i].dist;
+            }
+            //shootable POI
+            if (poiInfos[i].dist < closestShootablePoi &&
+                (poiInfos[i].poiType == PoiInfo.Types.ObjectiveBoat ||
+                 poiInfos[i].poiType == PoiInfo.Types.EnemyBoat ||
+                 poiInfos[i].poiType == PoiInfo.Types.EnemyFort))
+            {
+                anythingToShoot = true;
+                shootablePoi = i;
+                closestShootablePoi = poiInfos[i].dist;
             }
         }
 
@@ -192,7 +247,8 @@ public class boatControlAI : MonoBehaviour
             //softer steering to avoid overshooting
             else
             {
-                return angle / steerThreshold;
+                if (steerThreshold == 0) { return 0; }
+                else { return angle / steerThreshold; }
             }
         }
     }
@@ -201,7 +257,9 @@ public class boatControlAI : MonoBehaviour
     {
         FindPois(); //keep at the top of Update
 
-        //MOVEMENT
+
+        // ------ MOVEMENT ------
+
 
         //gets global/local positions + angle of targetPOI's location
         targetWaypoint = poiInfos[targetPoi].globalPos;
@@ -261,17 +319,36 @@ public class boatControlAI : MonoBehaviour
             //Doesnt bother if stopAtTarget is enabled AND the target is close enough
             if (!(stopAtTarget && poiInfos[targetPoi].dist < 5))
             {
-                steerIn = RotateBoat(targetWaypointAngle);
+                //when targeting enemy ships, offset their rotation a little bit, to enter a better orbit around their target
+                if ((poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectiveBoat ||
+                     poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat) &&
+                     poiInfos[targetPoi].dist > targetWaypointAimCircleRadius && poiInfos[targetPoi].dist <= 100)
+                {
+                    if (targetWaypointAngle < 0)
+                    {
+                        targetWaypointAngleCircleAdj = Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                    }
+                    else
+                    {
+                        targetWaypointAngleCircleAdj = -1 * Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                    }
+                }
+                else
+                {
+                    targetWaypointAngleCircleAdj = 0;
+                }
+                steerIn = RotateBoat(targetWaypointAngle + targetWaypointAngleCircleAdj);
             }
             else
             {
+                targetWaypointAngleCircleAdj = 0;
                 steerIn = 0;
             }
 
             //set moveIn
             //sets to 0 if the target is >45deg away OR
             //(stopAtTarget enabled AND EITHER the target is close enough, OR its moving fast enough to reach the target just by coasting)
-            if (Mathf.Abs(targetWaypointAngle) > 45 ||
+            if (Mathf.Abs(targetWaypointAngle + targetWaypointAngleCircleAdj) > 45 ||
                 (stopAtTarget && (poiInfos[targetPoi].dist < 5 || (bm.outSpd / bm.rb.linearDamping >= poiInfos[targetPoi].dist))))
             {
                 moveIn = 0;
@@ -285,31 +362,140 @@ public class boatControlAI : MonoBehaviour
         {
             //aimingAtTargetPOI - max moveIn, rotates its closest cannons towards the target waypoint
 
-            //point guns towards target waypoint - recalculates targetWaypointAngle to do so
+            //point guns towards target waypoint - uses targetWaypointAngleAiming to do so
             if (bc.shipClass == boatCombat.Classes.Cutter)
             {
-                targetWaypointAngle = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
+                //this is to combat an issue where cutters will approach a target sideways, steer the wrong way and slam into their target
+
+                targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
+
+                float moveDirToTarget = Vector3.SignedAngle(bm.localMoveDir * -1, targetWaypointLocal, Vector3.up);
+                float angleToMoveDir = Vector3.SignedAngle(Vector3.forward * -1, bm.localMoveDir * -1, Vector3.up);
+
+                if ((moveDirToTarget >= 90 || moveDirToTarget <= -90) &&
+                    ((moveDirToTarget < 0 && targetWaypointAngleAiming > 0) || 
+                    (moveDirToTarget > 0 && targetWaypointAngleAiming < 0)))
+                {
+                    steerIn = RotateBoat(angleToMoveDir);
+                }
+                else
+                {
+                    steerIn = RotateBoat(targetWaypointAngleAiming);
+                }
             }
             else
             {
                 //figures out if the left or right broadside is closer
-                if (targetWaypointAngle < 0)
+                if (targetWaypointAngleAiming < 0)
                 {
-                    targetWaypointAngle = Vector3.SignedAngle(Vector3.right * -1, targetWaypointLocal, Vector3.up);
+                    targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right * -1, targetWaypointLocal, Vector3.up);
+                    if (targetWaypointAngleAiming < 0 || poiInfos[targetPoi].dist < 10) { steerIn = RotateBoat(targetWaypointAngleAiming); }
+                    else { steerIn = 0; }
                 }
                 else
                 {
-                    targetWaypointAngle = Vector3.SignedAngle(Vector3.right, targetWaypointLocal, Vector3.up);
+                    targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right, targetWaypointLocal, Vector3.up);
+                    if (targetWaypointAngleAiming > 0 || poiInfos[targetPoi].dist < 10) { steerIn = RotateBoat(targetWaypointAngleAiming); }
+                    else { steerIn = 0; }
                 }
             }
-            steerIn = RotateBoat(targetWaypointAngle);
+
 
             moveIn = 1;
         }
 
-
         bm.SetMovementIn(moveIn);
         bm.SetRotationIn(steerIn);
+
+
+        // ------ SHOOTING ------
+
+
+        // If not already aiming, Gets the global position and velocity of its target
+        if (!isAiming)
+        {
+            if (anythingToShoot)
+            {
+                shootableWaypoint = poiInfos[shootablePoi].globalPos;
+
+                if (poiInfos[shootablePoi].poiType == PoiInfo.Types.ObjectiveBoat ||
+                    poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat)
+                {
+                    shootableWaypointVel = poiObjects[shootablePoi].GetComponent<boatMove>().globalMoveDir;
+                }
+                else
+                {
+                    shootableWaypointVel = Vector3.zero;
+                }
+            }
+            else
+            {
+                shootableWaypoint = transform.position;
+                shootableWaypointVel = Vector3.zero;
+            }
+
+            reticle.transform.position = shootableWaypoint;
+        }
+
+        //If it is aiming, use previously found target position/velocity, and timeAiming, to estimate its current position
+        else
+        {
+            reticle.transform.position = shootableWaypoint + (shootableWaypointVel * timeAiming);
+        }
+
+        //Gets the position it's currently aiming at, finds its distance, and uses it to lead its shot
+        reticle.transform.position += shootableWaypointVel * (reticle.transform.localPosition.magnitude / cannonballSpeed);
+
+        //Finds the distance between the reticle and the relevant cannons, to check if its in range
+        if (reticle.transform.localPosition.x >= 0 || bc.shipClass == boatCombat.Classes.Cutter)
+        {
+            shootableCannonCentreDist = Vector3.Distance(cannonCentreR, reticle.transform.localPosition);
+        }
+        else
+        {
+            shootableCannonCentreDist = Vector3.Distance(cannonCentreL, reticle.transform.localPosition);
+        }
+
+        if(shootableCannonCentreDist > 30.5f)
+        {
+            reticle.transform.localPosition = Vector3.zero;
+        }
+
+        //updates aimPos in boatCombat
+        bc.aimPos.x = reticle.transform.localPosition.x;
+        bc.aimPos.y = reticle.transform.localPosition.z;
+
+        //if aiming is valid, set isAiming to true. Also stays true, as long as volleying is > 0
+        if ((shootableCannonCentreDist <= 30.5f && bc.reloadProgress == 100) || (bc.volleying > 0 && isAiming))
+        {
+            if (timeAiming >= shootDelay)
+            {
+                bc.Shoot();
+            }
+
+            timeAiming += Time.deltaTime;
+            isAiming = true;
+        }
+        //when aiming stops being valid, if volleying == 0, fire off one last shot
+        else
+        {
+            if (bc.volleying == 0 && isAiming)
+            {
+                bc.Shoot();
+            }
+
+            timeAiming = 0;
+            isAiming = false;
+
+        }
+
+        reticleCircle.value = bc.reloadProgress;
+        reticle.transform.rotation = bc.rMan.playerReticleRotation;
+    }
+
+    public void RotateReticle(Quaternion input)
+    {
+        reticle.transform.rotation = input;
     }
 }
 

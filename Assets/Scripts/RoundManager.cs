@@ -35,6 +35,10 @@ public class RoundManager : MonoBehaviour
     public int[] scoresTeam;
     public int scoreTarget = 50;
 
+
+    //For rotating Ai's reticles
+    public Quaternion playerReticleRotation;
+
     void Awake()
     {
         //TEMPORARY
