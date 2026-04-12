@@ -1,9 +1,11 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class RoundManager : MonoBehaviour
 {
     //temporary
     public int playerStartingClass;
+    public bool player; //purely for debugging - if false, spawns an AI in the player's place
 
     //SPAWNING STUFF
     public GameObject cutterP, brigantineP, frigateP, galleonP;
@@ -17,11 +19,16 @@ public class RoundManager : MonoBehaviour
     public bool lives = false;
     public int maxLives = 1;
     public int totalShips = 32;
+    public List<int> allowedShips;
     
     public bool teams = false;
     public int playerTeam;
 
     public float spawnImmunityTime = 5f;
+
+    public Transform[] spawnsTemp;
+    public Transform spawnParent;
+    int arrayMover;
 
     public Transform[] spawns0, spawns1, spawns2;
     Transform temp;
@@ -47,6 +54,9 @@ public class RoundManager : MonoBehaviour
 
         ds = GameObject.Find("/deathScreen").GetComponent<DeathScreen>();
 
+        //Fills spawn arrays - GetComponentsInChildren includes the parent, so the extra stuff is needed to remove it
+        SpawnLocationAssign(ref spawns0, "/Spawns0");
+
         //SHUFFLE SPAWN LOCATION ARRAYS, FOR RANDOMISED SPAWN LOCATIONS
         SpawnShuffle(spawns0);
         SpawnShuffle(spawns1);
@@ -61,10 +71,18 @@ public class RoundManager : MonoBehaviour
             totalShips = Mathf.Clamp(totalShips, 2, spawns0.Length);
 
             shipStatuses = new ShipInfo[totalShips];
-            shipStatuses[0] = new ShipInfo(true, playerTeam, playerStartingClass);
+            if (player)
+            {
+                shipStatuses[0] = new ShipInfo(true, playerTeam, playerStartingClass);
+            }
+            else
+            {
+                shipStatuses[0] = new ShipInfo(false, playerTeam, playerStartingClass);
+            }
+
             for (int i=1;i<totalShips;i++)
             {
-                shipStatuses[i] = new ShipInfo(false, 0, Random.Range(0, 4));
+                shipStatuses[i] = new ShipInfo(false, 0, allowedShips[Random.Range(0, allowedShips.Count)]);
             }
         }
 
@@ -95,14 +113,30 @@ public class RoundManager : MonoBehaviour
         }
     }
 
-    void SpawnShuffle(Transform[] spawns)
+    void SpawnShuffle(Transform[] spawnsIn)
     {
-        for (int i = 0; i < spawns.Length; i++)
+        for (int i = 0; i < spawnsIn.Length; i++)
         {
-            position = Random.Range(i, spawns.Length);
-            temp = spawns[i];
-            spawns[i] = spawns[position];
-            spawns[position] = temp;
+            position = Random.Range(i, spawnsIn.Length);
+            temp = spawnsIn[i];
+            spawnsIn[i] = spawnsIn[position];
+            spawnsIn[position] = temp;
+        }
+    }
+    void SpawnLocationAssign(ref Transform[] spawnsIn, string searchIn)
+    {
+        spawnsTemp = GameObject.Find(searchIn).GetComponentsInChildren<Transform>();
+        spawnParent = GameObject.Find(searchIn).transform;
+        arrayMover = 0;
+        spawnsIn = new Transform[spawnsTemp.Length - 1];
+
+        for (int i = 0; i < spawnsTemp.Length; i++)
+        {
+            if (spawnsTemp[i] != spawnParent)
+            {
+                spawnsIn[arrayMover] = spawnsTemp[i];
+                arrayMover++;
+            }
         }
     }
 
@@ -191,6 +225,12 @@ public class RoundManager : MonoBehaviour
     public void ScoreIncSolo(int id)
     {
         scoresSolo[id] += 1;
+        Debug.Log(id + "'s score increases to " + scoresSolo[id]);
+    }
+
+    public void Killfeed(int killerId, int victimId)
+    {
+        Debug.Log(killerId + " sunk " + victimId);
     }
 
     public void ChangeClass(int id, int classIn)

@@ -22,7 +22,7 @@ public class boatMove : MonoBehaviour
     void Start()
     {
         //overrides inertiaTensor and inertiaTensorRotation of the rigidbody, otherwise rotation slightly affects the x and z axes
-        rb.inertiaTensor = new Vector3(1.0f, 1.0f, 1.0f);
+        rb.inertiaTensor = new Vector3(rb.mass, rb.mass, rb.mass);
         rb.inertiaTensorRotation = Quaternion.Euler(Vector3.zero);
     }
 
@@ -58,5 +58,8 @@ public class boatMove : MonoBehaviour
         localMoveDir = transform.InverseTransformDirection(globalMoveDir);
         globalMoveDir.y = 0;
         localMoveDir.y = 0;
+
+        transform.position = new Vector3(transform.position.x, 0, transform.position.z);
+        transform.rotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
     }
 }

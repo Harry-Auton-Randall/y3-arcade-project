@@ -45,7 +45,7 @@ public class boatControlAI : MonoBehaviour
     Vector3 cannonCentreL, cannonCentreR;
     float shootableCannonCentreDist;
 
-    float shootDelay = 0.75f;
+    float shootDelay = 1f;
     float timeAiming;
     bool isAiming;
 
@@ -65,6 +65,7 @@ public class boatControlAI : MonoBehaviour
 
         reticle = transform.Find("reticle");
         reticleCircle = transform.Find("reticle/reticleCanvas/Slider").GetComponent<Slider>();
+        reticleCircle.enabled = false;
     }
     void Start()
     {
@@ -213,7 +214,7 @@ public class boatControlAI : MonoBehaviour
         //TEMPORARY - logs if the targetPoi changes - uses poiObject, because the order of poiInfos is volatile
         if (previousPoi != poiObjects[targetPoi])
         {
-            Debug.Log("Target changed from " + previousPoi + " to " + poiObjects[targetPoi]);
+            //Debug.Log("Target changed from " + previousPoi + " to " + poiObjects[targetPoi]);
             previousPoi = poiObjects[targetPoi];
         }
     }
@@ -385,21 +386,31 @@ public class boatControlAI : MonoBehaviour
             }
             else
             {
-                //figures out if the left or right broadside is closer
-                if (targetWaypointAngleAiming < 0)
+                //If target is dead ahead or too close, steer away
+                if (Mathf.Abs(targetWaypointAngle) < 15 || poiInfos[targetPoi].dist < 10)
                 {
-                    targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right * -1, targetWaypointLocal, Vector3.up);
-                    if (targetWaypointAngleAiming < 0 || poiInfos[targetPoi].dist < 10) { steerIn = RotateBoat(targetWaypointAngleAiming); }
-                    else { steerIn = 0; }
+                    targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
+                    steerIn = RotateBoat(targetWaypointAngleAiming);
                 }
-                else
+                //Else, only bother steering if you've passed the target
+                else if (Mathf.Abs(targetWaypointAngle) <= 90)
                 {
-                    targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right, targetWaypointLocal, Vector3.up);
-                    if (targetWaypointAngleAiming > 0 || poiInfos[targetPoi].dist < 10) { steerIn = RotateBoat(targetWaypointAngleAiming); }
-                    else { steerIn = 0; }
+                    steerIn = 0;
+                }
+                else 
+                {
+                    //figures out if the left or right broadside is closer, then aims it towards the target
+                    if (targetWaypointAngle < 0)
+                    {
+                        targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right * -1, targetWaypointLocal, Vector3.up);
+                    }
+                    else
+                    {
+                        targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right, targetWaypointLocal, Vector3.up);
+                    }
+                    steerIn = RotateBoat(targetWaypointAngleAiming);
                 }
             }
-
 
             moveIn = 1;
         }
@@ -476,21 +487,20 @@ public class boatControlAI : MonoBehaviour
             timeAiming += Time.deltaTime;
             isAiming = true;
         }
-        //when aiming stops being valid, if volleying == 0, fire off one last shot
         else
         {
-            if (bc.volleying == 0 && isAiming)
-            {
-                bc.Shoot();
-            }
+            //when aiming stops being valid, if volleying == 0, fire off one last shot
+            //if (bc.volleying == 0 && isAiming)
+            //{
+            //    bc.Shoot();
+            //}
 
             timeAiming = 0;
             isAiming = false;
-
         }
 
-        reticleCircle.value = bc.reloadProgress;
-        reticle.transform.rotation = bc.rMan.playerReticleRotation;
+        //reticleCircle.value = bc.reloadProgress;
+        //reticle.transform.rotation = bc.rMan.playerReticleRotation;
     }
 
     public void RotateReticle(Quaternion input)

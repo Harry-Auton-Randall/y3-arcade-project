@@ -19,6 +19,8 @@ public class boatCombat : MonoBehaviour
     float maxReload;
     float maxReloadSpecial;
 
+    float reloadMult = 1f;
+
     //inventory
     public int maxWood;
     public int wood = 0;
@@ -216,6 +218,8 @@ public class boatCombat : MonoBehaviour
             cannonRangeDefaultRot = cannonRangeBoneL.localEulerAngles;
         }
 
+        maxReload = maxReload / reloadMult;
+
         //Set stats based on class-specific stats
         health = maxHealth;
         maxWood = (int)(maxHealth * 0.4f);
@@ -284,9 +288,10 @@ public class boatCombat : MonoBehaviour
         }
         else
         {
-            rMan.ChangeClass(gameID, Random.Range(0, 4));
+            rMan.ChangeClass(gameID, rMan.allowedShips[Random.Range(0, rMan.allowedShips.Count)]);
         }
         rMan.KillShip(gameID);
+        rMan.Killfeed(latestDamageID, gameID);
 
         //If game mode is deathmatch, give a kill to whoever last damaged you
         if (rMan.mode == 0)
