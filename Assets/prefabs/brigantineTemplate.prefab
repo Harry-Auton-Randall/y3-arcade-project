@@ -358,6 +358,83 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &4540069586757846135
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5308907703654956671}
+  - component: {fileID: 5903102836894330525}
+  - component: {fileID: 6304995772915133239}
+  m_Layer: 0
+  m_Name: Trigger
+  m_TagString: boatTrigger
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5308907703654956671
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4540069586757846135}
+  serializedVersion: 2
+  m_LocalRotation: {x: -6.123234e-17, y: 1, z: 6.123234e-17, w: -3.7493994e-33}
+  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8666721135083490976}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!64 &5903102836894330525
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4540069586757846135}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 6911245435811023445, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}
+--- !u!64 &6304995772915133239
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4540069586757846135}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -6869584063510064943, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}
 --- !u!1 &4777147444210510170
 GameObject:
   m_ObjectHideFlags: 0
@@ -1045,6 +1122,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 5308907703654956671}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6341152935104370023}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}
@@ -1115,7 +1195,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4269906186394865380}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 1c71652c9f71cde47b666682670b14cc, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -1174,9 +1254,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a734520df334df247bb373cb8c141ca1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::boatMove
+  rb: {fileID: 0}
   outSpd: 0
   outGlbSpd: 0
   outRotSpd: 0
+  globalMoveDir: {x: 0, y: 0, z: 0}
+  localMoveDir: {x: 0, y: 0, z: 0}
 --- !u!114 &6871583015038575364
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1193,6 +1276,7 @@ MonoBehaviour:
   isPlayer: 0
   team: 0
   gameID: 0
+  rMan: {fileID: 0}
   speed: 0
   rotate: 0
   maxHealth: 0
@@ -1210,9 +1294,16 @@ MonoBehaviour:
   onFire: 0
   chained: 0
   reloadProgress: 0
+  cannonCentreL: {x: 0, y: 0}
+  cannonCentreR: {x: 0, y: 0}
+  cannonCentreL2: {x: 0, y: 0}
+  cannonCentreR2: {x: 0, y: 0}
   cannonRangeMat: {fileID: 0}
   cannonRangeMatEmpty: {fileID: 0}
+  goodAimL: 0
+  goodAimR: 0
   volleyFireRate: 0
+  volleying: 0
   repairProgress: 0
   isRepairing: 0
   fireDamageInterval: 5

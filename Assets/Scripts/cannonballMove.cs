@@ -67,22 +67,31 @@ public class cannonballMove : MonoBehaviour
 
     void OnTriggerEnter(Collider collision)
     {
-        //Ignores the boat that shot it
-        if (collision != ignore)
+        //Ignores the boat that shot it, also triggers
+        if (collision != ignore && !collision.isTrigger)
         {
             //boat hit
-            if (collision.gameObject.layer == 7)
+            if (collision.gameObject.layer == LayerMask.NameToLayer("boat"))
             {
-                //Debug.Log(DateTime.Now + "    " + collision.transform.parent.gameObject.name);
-                collision.transform.parent.GetComponent<boatCombat>().TakeDamage(1, fire, chain, shooterID);
-                if (!pierce)
+                if (collision.transform.parent.GetComponent<boatCombat>().respawnImmunity == false)
                 {
-                    Destroy(this.gameObject);
+                    //Debug.Log("Hit a boat");
+                    //Debug.Log(DateTime.Now + "    " + collision.transform.parent.gameObject.name);
+                    collision.transform.parent.GetComponent<boatCombat>().TakeDamage(1, fire, chain, shooterID);
+                    if (!pierce)
+                    {
+                        Destroy(this.gameObject);
+                    }
+                }
+                else
+                {
+                    //Debug.Log("Hit an immune boat");
                 }
             }
             //terrain hit
             else
             {
+                //Debug.Log("Hit Terrain");
                 Destroy(this.gameObject);
             }
         }

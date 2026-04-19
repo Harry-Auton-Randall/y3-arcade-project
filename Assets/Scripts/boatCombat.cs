@@ -32,7 +32,6 @@ public class boatCombat : MonoBehaviour
     public float repairTime = 2.5f;
     public float unchainTime;
 
-    int resourceAdded;
     public int selectedAmmo = 0;
 
     //current variables
@@ -85,12 +84,24 @@ public class boatCombat : MonoBehaviour
 
     boatMove bm;
 
+    Rigidbody rb;
+
+    //respawn-immunity stuff
+    LayerMask boatMask;
+    int boatCollisions;
+    float respawnTime;
+    public bool respawnImmunity;
+    int fixSinceLastUp;
+
     void Awake()
     {
         volleying = 0;
 
         bm = GetComponent<boatMove>();
+        rb = GetComponent<Rigidbody>();
         rMan = GameObject.Find("RoundManager").GetComponent<RoundManager>();
+
+        boatMask = (1 << LayerMask.NameToLayer("boat")) | (1 << LayerMask.NameToLayer("boatRam"));
 
         //Set stats and cannons based on class
         switch (shipClass)
@@ -233,7 +244,7 @@ public class boatCombat : MonoBehaviour
         //SetTeamStuff(team); //TEMPORARY - base team stuff off of scene-specified settings, need to change eventually
     }
 
-    public void SetTeamStuff(int teamIn, int gameIDIn)
+    public void SetTeamStuff(int teamIn, int gameIDIn, bool respawning)
     {
         gameID = gameIDIn;
         team = teamIn;
@@ -246,6 +257,14 @@ public class boatCombat : MonoBehaviour
         {
             cannonRangeMat = Resources.Load("SolidMaterials/red60", typeof(Material)) as Material;
             cannonRangeMatEmpty = Resources.Load("SolidMaterials/red10", typeof(Material)) as Material;
+        }
+
+        if(respawning)
+        {
+            respawnTime = 0;
+            rb.excludeLayers = boatMask;
+            respawnImmunity = true;
+            transform.Find("hull").GetComponent<Renderer>().enabled = false;
         }
     }
 
@@ -354,7 +373,7 @@ public class boatCombat : MonoBehaviour
 
     public void AddResource(int type, int amount)
     {
-        resourceAdded = amount;
+        int resourceAdded = amount;
 
         if (type == 0) //wood
         {
@@ -411,6 +430,22 @@ public class boatCombat : MonoBehaviour
         }
     }
 
+    void OnTriggerStay(Collider collision)
+    {
+        if (collision.gameObject.tag == "boatTrigger")
+        {
+            boatCollisions += 1;
+        }
+    }
+
+    //Keeps track of how many FixedUpdates have run before Update
+    //Also resets boatCollisions. Because FixedUpdate runs before OnTrigger stuff, boatCollisions only counts collisions on the final physics-frame before Update
+    void FixedUpdate()
+    {
+        boatCollisions = 0;
+        fixSinceLastUp++;
+    }
+
     //speed and rotate initialised in this script and written to boatMove, so each ship can use the same boatMove script
     void Start()
     {
@@ -419,6 +454,24 @@ public class boatCombat : MonoBehaviour
 
     void Update()
     {
+        if (respawnImmunity && (respawnTime < rMan.spawnImmunityTime))
+        {
+            respawnTime += Time.deltaTime;
+        }
+
+        //checks if respawnImmunity is enabled, and if it needs disabling
+        //Because this happens in Update, which occurs after OnTrigger stuff, collision info will be up-to-date, and not x frames behind
+        if (fixSinceLastUp > 0)
+        { 
+            if (respawnImmunity && (respawnTime >= rMan.spawnImmunityTime) && (boatCollisions == 0))
+            {
+                rb.excludeLayers = 0;
+                respawnImmunity = false;
+                transform.Find("hull").GetComponent<Renderer>().enabled = true; //TEMPORARY
+            }
+        }
+        fixSinceLastUp = 0;
+
         //on fire - deals 1 damage every (fireDamageInterval) seconds
         //checks that 1. enough time has passed and 2. it hasn't already dealt damage for that time period (fireDamage)
         if (onFire)

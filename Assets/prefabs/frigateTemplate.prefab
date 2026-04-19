@@ -1,5 +1,59 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &62704929922313037
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2901472816787217122}
+  - component: {fileID: 755073381561519601}
+  m_Layer: 0
+  m_Name: Trigger
+  m_TagString: boatTrigger
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2901472816787217122
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62704929922313037}
+  serializedVersion: 2
+  m_LocalRotation: {x: -6.123234e-17, y: 1, z: 6.123234e-17, w: -3.7493994e-33}
+  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3213702982565817347}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!64 &755073381561519601
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62704929922313037}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 6911245435811023445, guid: 0b337cb54e51fdc4380e9b951e504526, type: 3}
 --- !u!1 &755049964488800782
 GameObject:
   m_ObjectHideFlags: 0
@@ -723,6 +777,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0b337cb54e51fdc4380e9b951e504526, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 2901472816787217122}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0b337cb54e51fdc4380e9b951e504526, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7840774993853442287}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0b337cb54e51fdc4380e9b951e504526, type: 3}
@@ -813,9 +870,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a734520df334df247bb373cb8c141ca1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::boatMove
+  rb: {fileID: 0}
   outSpd: 0
   outGlbSpd: 0
   outRotSpd: 0
+  globalMoveDir: {x: 0, y: 0, z: 0}
+  localMoveDir: {x: 0, y: 0, z: 0}
 --- !u!114 &9196263828377234955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -832,6 +892,7 @@ MonoBehaviour:
   isPlayer: 0
   team: 0
   gameID: 0
+  rMan: {fileID: 0}
   speed: 0
   rotate: 0
   maxHealth: 0
@@ -849,9 +910,16 @@ MonoBehaviour:
   onFire: 0
   chained: 0
   reloadProgress: 0
+  cannonCentreL: {x: 0, y: 0}
+  cannonCentreR: {x: 0, y: 0}
+  cannonCentreL2: {x: 0, y: 0}
+  cannonCentreR2: {x: 0, y: 0}
   cannonRangeMat: {fileID: 0}
   cannonRangeMatEmpty: {fileID: 0}
+  goodAimL: 0
+  goodAimR: 0
   volleyFireRate: 0
+  volleying: 0
   repairProgress: 0
   isRepairing: 0
   fireDamageInterval: 5

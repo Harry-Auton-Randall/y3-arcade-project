@@ -108,7 +108,7 @@ public class RoundManager : MonoBehaviour
         {
             for (int i = 0; i < shipStatuses.Length; i++)
             {
-                SpawnShip(i, spawns0[i]);
+                SpawnShip(i, spawns0[i], false);
             }
         }
     }
@@ -147,20 +147,20 @@ public class RoundManager : MonoBehaviour
             if (shipStatuses[i].respawnProgress != 0f)
             {
                 shipStatuses[i].respawnProgress -= Time.deltaTime;
-                if (shipStatuses[i].respawnProgress <= 0f)
+                if (shipStatuses[i].respawnProgress <= 0f && !(lives && shipStatuses[i].lives == 0))
                 {
                     shipStatuses[i].respawnProgress = 0f;
                     shipStatuses[i].isAlive = true;
                     switch (shipStatuses[i].team)
                     {
                         case 0:
-                            SpawnShip(i, spawns0[Random.Range(0, spawns0.Length)]);
+                            SpawnShip(i, spawns0[Random.Range(0, spawns0.Length)], true);
                             break;
                         case 1:
-                            SpawnShip(i, spawns1[Random.Range(0, spawns1.Length)]);
+                            SpawnShip(i, spawns1[Random.Range(0, spawns1.Length)], true);
                             break;
                         case 2:
-                            SpawnShip(i, spawns2[Random.Range(0, spawns2.Length)]);
+                            SpawnShip(i, spawns2[Random.Range(0, spawns2.Length)], true);
                             break;
                     }
                 }
@@ -168,7 +168,7 @@ public class RoundManager : MonoBehaviour
         }
     }
 
-    void SpawnShip(int id, Transform spawnPos)
+    void SpawnShip(int id, Transform spawnPos, bool respawning)
     {
         if (shipStatuses[id].isPlayer)
         {
@@ -211,7 +211,7 @@ public class RoundManager : MonoBehaviour
             }
         }
 
-        instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team, id);
+        instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team, id, respawning);
         instance.transform.position = spawnPos.position;
         instance.transform.rotation = spawnPos.rotation;
 
