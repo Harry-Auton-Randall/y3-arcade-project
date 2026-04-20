@@ -60,6 +60,11 @@ public class boatControlAI : MonoBehaviour
 
     //AStar pathfinding stuff
     Waypoint[] allWaypoints;
+    Ray ray;
+    RaycastHit rayHit;
+    LayerMask terrainMask;
+    List<Vector3> pathingWaypoints;
+    bool pathfinding;
 
 
     void Awake()
@@ -71,6 +76,9 @@ public class boatControlAI : MonoBehaviour
         reticle = transform.Find("reticle");
         reticleCircle = transform.Find("reticle/reticleCanvas/Slider").GetComponent<Slider>();
         reticleCircle.enabled = false;
+
+        terrainMask = (1 << LayerMask.NameToLayer("terrain"));
+        pathingWaypoints = new List<Vector3>();
     }
     void Start()
     {
@@ -307,6 +315,11 @@ public class boatControlAI : MonoBehaviour
         }
     }
 
+    void GeneratePathingRoute()
+    {
+        
+    }
+
     void Update()
     {
         FindPois(); //keep at the top of Update
@@ -315,8 +328,39 @@ public class boatControlAI : MonoBehaviour
         // ------ MOVEMENT ------
 
 
-        //gets global/local positions + angle of targetPOI's location
-        targetWaypoint = poiInfos[targetPoi].globalPos;
+        //Checks if there's any terrain between this ship and the targetPOI. If not, head straight for it. If so, generate pathfinding route (if not already present) and follow it
+        ray = new Ray(this.transform.position, poiInfos[targetPoi].globalPos - this.transform.position);
+        Debug.DrawRay(this.transform.position, ray.direction * Vector3.Distance(this.transform.position, poiInfos[targetPoi].globalPos), Color.yellow);
+
+        if (Physics.Raycast(ray, out rayHit, Vector3.Distance(this.transform.position, poiInfos[targetPoi].globalPos), terrainMask))
+        {
+            if (!pathfinding)
+            {
+                //Call Generate-Route function here
+            }
+            else
+            {
+                //Use more rays to check if the route's starting position can still see this ship, and the ending position can still see the target
+                //If not, regenerate the route
+                //note: starting position and ending position should only be actual waypoints, not the positions of the ships themselves
+            }
+
+            //check all pathingWaypoints to see if the ship's within a certain zone
+            //if so, remove it and everything before it
+
+            if (pathingWaypoints.Count == 0)
+            {
+                //regenerate the route
+            }
+
+            targetWaypoint = pathingWaypoints[0];
+            pathfinding = true;
+        }
+        else
+        {
+            targetWaypoint = poiInfos[targetPoi].globalPos;
+            pathfinding = false;
+        }
         targetWaypointLocal = transform.InverseTransformPoint(targetWaypoint);
         targetWaypointLocal.y = 0;
         targetWaypointAngle = Vector3.SignedAngle(Vector3.forward, targetWaypointLocal, Vector3.up);
