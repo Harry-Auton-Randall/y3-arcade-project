@@ -34,6 +34,14 @@ public class RoundManager : MonoBehaviour
     Transform temp;
     int position;
 
+    //Waypoints
+    public Transform[] waypointTransforms;
+    public WaypointInfo[] waypoints;
+
+    public Waypoint[] allWaypoints;
+
+
+
     public ShipInfo[] shipStatuses;
 
     //GAME MODE STUFF
@@ -61,6 +69,72 @@ public class RoundManager : MonoBehaviour
         SpawnShuffle(spawns0);
         SpawnShuffle(spawns1);
         SpawnShuffle(spawns2);
+
+        //Waypoints
+        SpawnLocationAssign(ref waypointTransforms, "/Waypoints");
+        waypoints = new WaypointInfo[waypointTransforms.Length];
+        for (int i = 0; i < waypointTransforms.Length; i++)
+        {
+            waypoints[i] = waypointTransforms[i].GetComponent<WaypointInfo>();
+        }
+
+        //Waypoint objects are initialised here, so respawning boats can just copy it, instead of having to re-initialise every time
+        //The Waypoint class itself is stored in boatControlAI.cs
+
+        allWaypoints = new Waypoint[waypoints.Length + 2];
+        for (int i = 0; i < waypoints.Length; i++)
+        {
+            allWaypoints[i] = new Waypoint(waypoints[i].gameObject);
+        }
+
+        //For each element in allWaypoints, checks if any other elements match any of the neighbours in the relevant object
+        //If so, copy the information into allWaypoints
+
+        for (int i = 0; i < waypoints.Length; i++)
+        {
+            for (int j = 0; j < waypoints.Length; j++)
+            {
+                if (j != i)
+                {
+                    for (int k = 0; k < waypoints[i].neighbours.Length; k++)
+                    {
+                        if (waypoints[i].neighbours[k] == waypoints[j].gameObject)
+                        {
+                            allWaypoints[i].neighbours.Add(allWaypoints[j]);
+
+                            allWaypoints[i].neighbourAddresses.Add(j);
+
+                            allWaypoints[i].neighbourDists.Add
+                                (Vector3.Distance(waypoints[i].transform.position, waypoints[j].transform.position));
+
+                            allWaypoints[i].neighbourNo += 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        //Debug.Log The entire contents of every Waypoint object
+        //for (int i=0;i<allWaypoints.Length;i++)
+        //{
+        //    if (allWaypoints[i] == null)
+        //    {
+        //        Debug.Log(null);
+        //    }
+        //    else
+        //    {
+        //        Debug.Log(allWaypoints[i].obj);
+        //        for (int j = 0; j < allWaypoints[i].neighbours.Count; j++)
+        //        {
+        //            Debug.Log(allWaypoints[i].neighbours[j].obj);
+        //            Debug.Log(allWaypoints[i].neighbourAddresses[j]);
+        //            Debug.Log(allWaypoints[i].neighbourDists[j]);
+        //        }
+        //        Debug.Log(allWaypoints[i].neighbourNo);
+        //        Debug.Log(allWaypoints[i].heuristic);
+        //        Debug.Log(allWaypoints[i].globalPos);
+        //    }
+        //}
 
         if (teams)
         {

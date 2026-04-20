@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class boatControlAI : MonoBehaviour
 {
@@ -57,6 +58,10 @@ public class boatControlAI : MonoBehaviour
     bool stopAtTarget;
     bool aimingAtTargetPoi; //specifically for rotating ships to aim cannons at their targetPOI, if relevant
 
+    //AStar pathfinding stuff
+    Waypoint[] allWaypoints;
+
+
     void Awake()
     {
         poiMask = (1 << LayerMask.NameToLayer("boat"));
@@ -105,14 +110,62 @@ public class boatControlAI : MonoBehaviour
         nearbyPois = new Collider[bc.rMan.totalShips + 10]; //TEMPORARY - while AIs aren't spawned by RoundManager and instead placed manually
 
         poiInfos = new PoiInfo[nearbyPois.Length + objectiveWaypoints.Length];
-        for (int i=0;i<poiInfos.Length;i++)
+        for (int i = 0; i < poiInfos.Length; i++)
         {
             poiInfos[i] = new PoiInfo(poiRadius);
         }
 
         poiObjects = new GameObject[poiInfos.Length];
-    }
 
+
+        //Waypoint Stuff
+        //Duplicates every Waypoint object in RoundManager's allWaypoints
+
+        this.allWaypoints = new Waypoint[bc.rMan.allWaypoints.Length];
+        for (int i=0;i<allWaypoints.Length;i++)
+        {
+            if (bc.rMan.allWaypoints[i] != null)
+            {
+                this.allWaypoints[i] = new Waypoint(bc.rMan.allWaypoints[i].obj);
+                this.allWaypoints[i].neighbourNo = bc.rMan.allWaypoints[i].neighbourNo;
+            }
+        }
+        for (int i = 0; i < allWaypoints.Length; i++)
+        {
+            if (bc.rMan.allWaypoints[i] != null)
+            {
+                for (int j = 0; j < bc.rMan.allWaypoints[i].neighbours.Count; j++)
+                {
+                    this.allWaypoints[i].neighbours.Add(this.allWaypoints[bc.rMan.allWaypoints[i].neighbourAddresses[j]]);
+                    this.allWaypoints[i].neighbourAddresses.Add(bc.rMan.allWaypoints[i].neighbourAddresses[j]);
+                    this.allWaypoints[i].neighbourDists.Add(bc.rMan.allWaypoints[i].neighbourDists[j]);
+                }
+            }
+        }
+
+        //Debug.LogError(gameObject);
+        //for (int i = 0; i < allWaypoints.Length; i++)
+        //{
+        //    if (allWaypoints[i] == null)
+        //    {
+        //        Debug.Log(null);
+        //    }
+        //    else
+        //    {
+        //        Debug.LogWarning("Waypoint: " + allWaypoints[i].obj);
+        //        for (int j = 0; j < allWaypoints[i].neighbours.Count; j++)
+        //        {
+        //            Debug.Log("Neighbour is " + allWaypoints[i].neighbours[j].obj);
+        //            Debug.Log("Stored in address " + allWaypoints[i].neighbourAddresses[j]);
+        //            Debug.Log("Distance is " + allWaypoints[i].neighbourDists[j]);
+        //        }
+        //        Debug.Log(allWaypoints[i].neighbourNo + " neighbours in total");
+        //        Debug.Log("heuristic is " + allWaypoints[i].heuristic);
+        //        Debug.Log("position is " + allWaypoints[i].globalPos);
+        //    }
+        //}
+
+    }
 
     //Finds all POIs within poiRadius (should be 150m), pick one based on priority + distance
     void FindPois()
@@ -152,7 +205,7 @@ public class boatControlAI : MonoBehaviour
             poiInfos[colliderToPoi].Set(PoiInfo.Types.ObjectivePoint, objectiveWaypoints[i], this.transform.position);
             if (bc.rMan.mode == 0)
             {
-                poiInfos[colliderToPoi].priority = -10; //if deathmatch, sets objective priority extra low (should only go here if there are no other POIs)
+                poiInfos[colliderToPoi].priority =  10; //if deathmatch, sets objective priority extra low (should only go here if there are no other POIs)
             }
 
             poiObjects[colliderToPoi] = GameObject.Find("/sun");
@@ -566,5 +619,27 @@ public class PoiInfo
                 priority = 0;
                 break;
         }
+    }
+}
+
+public class Waypoint
+{
+    public GameObject obj;
+    public List<Waypoint> neighbours;
+    public List<int> neighbourAddresses;
+    public List<float> neighbourDists;
+    public int neighbourNo;
+    public float heuristic;
+    public Vector3 globalPos;
+
+    public Waypoint(GameObject objIn)
+    {
+        obj = objIn;
+        neighbours = new List<Waypoint>();
+        neighbourAddresses = new List<int>();
+        neighbourDists = new List<float>();
+        neighbourNo = 0;
+        heuristic = 0;
+        globalPos = obj.transform.position;
     }
 }
