@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class boatMove : MonoBehaviour
 {
@@ -10,6 +11,15 @@ public class boatMove : MonoBehaviour
     float movementIn;
     float rotationIn;
 
+    //For getting pushed by pushing zones
+    Vector3 globalForce, totalPushForce;
+    List<GameObject> pushingZones;
+    float pushDirMag;
+
+    //For brigantine's special attack
+    public bool charge = false;
+    public float chargeSpeedMult = 1f;
+
     public float outSpd, outGlbSpd, outRotSpd;
     public Vector3 globalMoveDir, localMoveDir;
 
@@ -17,6 +27,7 @@ public class boatMove : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         //pi = GetComponent<PlayerInput>();
+        pushingZones = new List<GameObject>();
     }
 
     void Start()
@@ -47,8 +58,38 @@ public class boatMove : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb.AddRelativeForce(0, 0, rb.mass * speed * rb.linearDamping * movementIn);
+        if (!charge)
+        {
+            rb.AddRelativeForce(0, 0, rb.mass * speed * rb.linearDamping * movementIn);
+            globalForce = this.transform.forward * (rb.mass * speed * rb.linearDamping * movementIn);
+        }
+        else
+        {
+            rb.AddRelativeForce(0, 0, rb.mass * speed * rb.linearDamping * chargeSpeedMult);
+            globalForce = this.transform.forward * (rb.mass * speed * rb.linearDamping * chargeSpeedMult);
+        }
         rb.AddTorque(Vector3.up * rb.inertiaTensor.y * rotate * Mathf.Deg2Rad * rb.angularDamping * rotationIn);
+
+        //PushingZone stuff
+
+        totalPushForce = Vector3.zero;
+        for (int i = 0; i < pushingZones.Count; i++)
+        {
+            totalPushForce += (pushingZones[i].transform.forward);
+        }
+        if (totalPushForce != Vector3.zero)
+        {
+            totalPushForce.Normalize();
+            //pushDirMag = the amount of force being applied to the rb, in totalPushForce's direction
+            pushDirMag = Vector3.Dot(globalForce, totalPushForce);
+            if (pushDirMag > 0)
+            {
+                rb.AddForce(totalPushForce * pushDirMag * -1);
+            }
+            rb.AddForce(totalPushForce * rb.mass * rb.linearDamping * -4);
+        }
+
+
 
         outSpd = Vector3.Dot(transform.forward, rb.linearVelocity);
         outGlbSpd = rb.linearVelocity.magnitude;
@@ -61,5 +102,21 @@ public class boatMove : MonoBehaviour
 
         transform.position = new Vector3(transform.position.x, 0, transform.position.z);
         transform.rotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
+    }
+
+    void OnTriggerEnter(Collider collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("PushingZone")
+            && !(pushingZones.Contains(collision.gameObject)))
+        {
+            pushingZones.Add(collision.gameObject);
+        }
+    }
+    void OnTriggerExit(Collider collision)
+    {
+        if (pushingZones.Contains(collision.gameObject))
+        {
+            pushingZones.Remove(collision.gameObject);
+        }
     }
 }

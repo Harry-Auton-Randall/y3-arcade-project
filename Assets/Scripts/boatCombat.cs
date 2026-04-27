@@ -128,12 +128,14 @@ public class boatCombat : MonoBehaviour
                 break;
 
             case Classes.Brigantine:
-                speed = 9f;
-                rotate = 75f;
+                speed = 10f;
+                rotate = 80f;
                 maxHealth = 15;
                 maxReload = 4f;
                 maxReloadSpecial = 20f;
                 unchainTime = repairTime * (4f/3f);
+
+
 
                 cannonsL = new GameObject[] { transform.Find("cannonL1").gameObject,
                                               transform.Find("cannonL2").gameObject };
@@ -468,6 +470,10 @@ public class boatCombat : MonoBehaviour
     void Start()
     {
         bm.SetStats(speed, rotate);
+        if (shipClass == Classes.Brigantine)
+        {
+            bm.chargeSpeedMult = 2.5f;
+        }
     }
 
     void Update()
