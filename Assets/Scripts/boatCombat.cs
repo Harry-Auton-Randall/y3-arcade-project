@@ -93,6 +93,9 @@ public class boatCombat : MonoBehaviour
     public bool respawnImmunity;
     int fixSinceLastUp;
 
+    //boat dimensions
+    public float shipLength, shipWidth;
+
     void Awake()
     {
         volleying = 0;
@@ -119,6 +122,9 @@ public class boatCombat : MonoBehaviour
                 cannonCentreR.y = cannonsR[0].transform.localPosition.z;
                 cannonRangeR = cannonsR[0].transform.Find("range").GetComponent<Renderer>();
 
+                shipLength = 3;
+                shipWidth = 1.5f;
+
                 break;
 
             case Classes.Brigantine:
@@ -142,6 +148,10 @@ public class boatCombat : MonoBehaviour
 
                 volleyFireRate = 0.125f;
                 volleyFireOrderL = new int[] { 0, 1 };
+
+                shipLength = 5;
+                shipWidth = 2;
+
                 break;
 
             case Classes.Frigate:
@@ -175,6 +185,10 @@ public class boatCombat : MonoBehaviour
 
                 volleyFireRate = 0.08f;
                 volleyFireOrderL = new int[] { 0, 1, 2, 3 };
+
+                shipLength = 6.5f;
+                shipWidth = 2.5f;
+
                 break;
 
             case Classes.Galleon:
@@ -212,6 +226,10 @@ public class boatCombat : MonoBehaviour
 
                 volleyFireRate = 0.06f;
                 volleyFireOrderL = new int[] { 0, 1, 2, 3, 4, 5 };
+
+                shipLength = 8;
+                shipWidth = 3;
+
                 break;
         }
         if (shipClass != Classes.Cutter)

@@ -66,6 +66,7 @@ public class boatControlAI : MonoBehaviour
     List<WaypointRoutingInfo> wrf = new List<WaypointRoutingInfo>();
     List<Vector3> pathingWaypoints = new List<Vector3>();
     bool pathfinding;
+    float scr; //spherecast radius
 
 
     void Awake()
@@ -82,6 +83,8 @@ public class boatControlAI : MonoBehaviour
     }
     void Start()
     {
+        scr = (bc.shipWidth - 0.1f) / 2f;
+
         //sets cannonCentres based on class
         switch (bc.shipClass)
         {
@@ -326,7 +329,8 @@ public class boatControlAI : MonoBehaviour
         allWaypoints[al - 1] = new Waypoint(poiObjects[targetPoi]);
 
         //Removes any neighbour info that would've been connected to the target of the last pathing route
-        for (int i=0;i<al;i++)
+        //Also sets heuristic values
+        for (int i=0;i<al - 2;i++)
         {
             while (allWaypoints[i].neighbours.Count > allWaypoints[i].neighbourNo)
             {
@@ -334,73 +338,153 @@ public class boatControlAI : MonoBehaviour
                 allWaypoints[i].neighbourAddresses.RemoveAt(allWaypoints[i].neighbourNo);
                 allWaypoints[i].neighbourDists.RemoveAt(allWaypoints[i].neighbourNo);
             }
+
+            allWaypoints[i].heuristic = Vector3.Distance(allWaypoints[i].globalPos, allWaypoints[al - 1].globalPos);
         }
 
         //For every waypoint, checks if either this ship or the target can reach them. If so, makes new neighbours
         for (int i=0;i<al - 2;i++)
         {
             //This ship's waypoint
-            if (Physics.SphereCast(allWaypoints[i].globalPos, 2.5f, (allWaypoints[al - 2].globalPos - allWaypoints[i].globalPos),
+            if (!Physics.SphereCast(allWaypoints[i].globalPos, scr, (allWaypoints[al - 2].globalPos - allWaypoints[i].globalPos).normalized,
                 out rayHit, Vector3.Distance(allWaypoints[i].globalPos, allWaypoints[al - 2].globalPos), terrainMask))
             {
                 allWaypoints[al - 2].neighbours.Add(allWaypoints[i]);
                 allWaypoints[al - 2].neighbourAddresses.Add(i);
                 allWaypoints[al - 2].neighbourDists.Add(Vector3.Distance(allWaypoints[i].globalPos, allWaypoints[al - 2].globalPos));
+                //Debug.Log("ship can go to waypoint " + allWaypoints[i].obj.name);
             }
+            
 
             //target ship's waypoint
-            if (Physics.SphereCast(allWaypoints[i].globalPos, 2.5f, (allWaypoints[al - 1].globalPos - allWaypoints[i].globalPos),
+            if (!Physics.SphereCast(allWaypoints[i].globalPos, scr, (allWaypoints[al - 1].globalPos - allWaypoints[i].globalPos).normalized,
                 out rayHit, Vector3.Distance(allWaypoints[i].globalPos, allWaypoints[al - 1].globalPos), terrainMask))
             {
                 allWaypoints[i].neighbours.Add(allWaypoints[al - 1]);
                 allWaypoints[i].neighbourAddresses.Add(al - 1);
                 allWaypoints[i].neighbourDists.Add(Vector3.Distance(allWaypoints[i].globalPos, allWaypoints[al - 1].globalPos));
+                //Debug.Log("Target can go to waypoint " + allWaypoints[i].obj.name);
             }
+
         }
+
+        //for (int i = 0; i < allWaypoints[al - 2].neighbours.Count;i++)
+        //{
+        //    Debug.Log(allWaypoints[al - 2].neighbours[i].obj);
+        //    Debug.Log(allWaypoints[al - 2].neighbourAddresses[i];
+        //    Debug.Log(allWaypoints[al - 2].neighbourDists[i];
+        //}
 
         //ACTUALLY DOING THE PATHFINDING
 
+        pathingWaypoints.Clear();
 
         wrf.Clear();
         wrf.Add(new WaypointRoutingInfo());
         wrf[0].cameFrom.Add(al - 2);
+        wrf[0].wi = (wrf[0].cameFrom[wrf[0].cameFrom.Count - 1]);
         wrf[0].costSoFar = 0;
         wrf[0].priority = 0;
+        wrf[0].frontier = true;
 
         int hpi; //highest priority index - also the index of the wrf currently being looked at
-        int mrcf; //most recent cameFrom - the index of the Waypoint in allWaypoints, connected to the wrf being looked at
         float newCost;
+        int niwl; //(allWaypoint) neighbour in wrf list
 
-        while (wrf.Count > 0)
+        for (int k=0;k<100;k++)
         {
             //Find whichever waypointRoutingInfo has the highest priority, because i don't know how to make a priority queue in Unity
+
             hpi = -1;
             for (int i=0;i<wrf.Count;i++)
             {
-                if (hpi == -1 || wrf[hpi].priority > wrf[i].priority)
+                Debug.Log("wrf entry " + i);
+                Debug.Log("Its priority is " + wrf[i].priority);
+
+                if (!wrf[i].frontier)
+                {
+                    Debug.Log("Its not on the frontier");
+                }
+                else if (hpi == -1 || wrf[hpi].priority < wrf[i].priority)
                 {
                     hpi = i;
                 }
             }
 
-            mrcf = wrf[hpi].cameFrom[wrf[hpi].cameFrom.Count - 1];
+            Debug.Log("Current wrf being looked at is " + hpi);
+            Debug.Log("Its object is " + allWaypoints[wrf[hpi].wi].obj.name);
 
             //check if the goal has been reached
-            if (mrcf == al - 1)
+            if (wrf[hpi].wi == al - 1)
             {
-                //do stuff here
+                //Adds the global position of each of the wrf[hpi]'s cameFroms to the list
+                for (int i = 1; i < wrf[hpi].cameFrom.Count;i++)
+                {
+                    pathingWaypoints.Add(allWaypoints[wrf[hpi].cameFrom[i]].globalPos);
+                }
+                Debug.Log("Path found");
+                return;
             }
             else
             {
                 //Check out each neighbour of the mrcf
-                for (int i = 0; i < allWaypoints[mrcf].neighbours.Count; i++)
+                for (int i = 0; i < allWaypoints[wrf[hpi].wi].neighbours.Count; i++)
                 {
-                    newCost = wrf[hpi].costSoFar + allWaypoints[mrcf].neighbourDists[i];
-                    //if...
+                    newCost = wrf[hpi].costSoFar + allWaypoints[wrf[hpi].wi].neighbourDists[i];
+
+                    //Checks if the neighbour being looked at is in wrf already
+                    niwl = -1;
+                    for (int j=0;j<wrf.Count;j++)
+                    {
+                        if (wrf[j].wi == allWaypoints[wrf[hpi].wi].neighbourAddresses[i])
+                        {
+                            //Only update the found wrf if the new version is longer
+                            if (newCost < wrf[j].costSoFar)
+                            {
+                                niwl = j;
+                            }
+                            else
+                            {
+                                niwl = -2;
+                            }
+
+                            break;
+                        }
+                    }
+
+                    //niwl -1 means the neighbour isnt in the wrf list, and needs adding
+                    //niwl -2 means it is in the list, but the new version isnt quicker, so dont change anything
+                    //any other niwl is the index of wrf, when it needs changing
+                    if (niwl != -2)
+                    {
+                        if (niwl == -1)
+                        {
+                            wrf.Add(new WaypointRoutingInfo());
+                            niwl = wrf.Count - 1;
+                        }
+
+                        //Set wrf's values
+                        wrf[niwl].costSoFar = newCost;
+                        wrf[niwl].priority = (allWaypoints[wrf[niwl].wi].heuristic) + newCost;
+
+                        //Set the cameFrom list to hpi's list, then add the neighbour's address to the end
+                        wrf[niwl].cameFrom.Clear();
+                        for (int j = 0; j < wrf[hpi].cameFrom.Count; j++)
+                        {
+                            wrf[niwl].cameFrom.Add(wrf[hpi].cameFrom[j]);
+                        }
+                        wrf[niwl].cameFrom.Add(allWaypoints[wrf[hpi].wi].neighbourAddresses[i]);
+                        wrf[niwl].wi = (wrf[niwl].cameFrom[wrf[niwl].cameFrom.Count - 1]);
+                        wrf[niwl].frontier = true;
+                    }
                 }
             }
 
+            wrf[hpi].frontier = false;
+
         }
+
+        Debug.Log("Path not found, something's gone wrong");
 
 
     }
@@ -421,7 +505,7 @@ public class boatControlAI : MonoBehaviour
         {
             if (!pathfinding)
             {
-                //Call Generate-Route function here
+                GeneratePathingRoute();
             }
             else
             {
@@ -435,7 +519,7 @@ public class boatControlAI : MonoBehaviour
 
             if (pathingWaypoints.Count == 0)
             {
-                //regenerate the route
+                GeneratePathingRoute();
             }
 
             targetWaypoint = pathingWaypoints[0];
@@ -775,8 +859,10 @@ public class Waypoint
 
 public class WaypointRoutingInfo
 {
+    public bool frontier;
     public float priority;
     public List<int> cameFrom; //This is a list of allWaypoints indexes, not wrf indexes
+    public int wi; //waypointIndex - The index at the end of cameFrom, / the allWaypoint index currently being looked at
     public float costSoFar;
     public WaypointRoutingInfo()
     {

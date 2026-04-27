@@ -30,7 +30,6 @@ public class boatControlPlayer : MonoBehaviour
     Vector2 spyglassScale;
     Vector3 spyglassPos;
     float spyglassScaleFac;
-    public float shipLength;
 
     boatCombat bc;
 
@@ -205,7 +204,7 @@ public class boatControlPlayer : MonoBehaviour
         {
             spyglassOutlineImage.enabled = true;
             spyglassScaleFac = (cc.screenSize.y / 90);
-            spyglassScale.y = spyglassScaleFac * (shipLength + 6) * (4096 / 80);
+            spyglassScale.y = spyglassScaleFac * (bc.shipLength + 6) * (4096 / 80);
             spyglassScale.x = spyglassScale.y;
             spyglassOutline.sizeDelta = spyglassScale;
 
