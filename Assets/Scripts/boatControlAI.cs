@@ -13,7 +13,7 @@ public class boatControlAI : MonoBehaviour
     //POI-finding
     LayerMask poiMask;
 
-    Vector3[] objectiveWaypoints;
+    GameObject[] objectiveWaypoints;
     Collider[] nearbyPois;
     PoiInfo[] poiInfos;
     float poiRadius = 150f;
@@ -55,7 +55,8 @@ public class boatControlAI : MonoBehaviour
 
     float moveIn, steerIn;
 
-    bool stopAtTarget;
+    bool stopAtTarget; //Says if the targetPOI is the type that should ba parked on#
+    bool stoppingAtTarget; //Says if the boat should be stopping at the waypoint right now
     bool aimingAtTargetPoi; //specifically for rotating ships to aim cannons at their targetPOI, if relevant
 
     //AStar pathfinding stuff
@@ -67,6 +68,7 @@ public class boatControlAI : MonoBehaviour
     List<Vector3> pathingWaypoints = new List<Vector3>();
     bool pathfinding;
     float scr; //spherecast radius
+    bool canReachTarget;
 
 
     void Awake()
@@ -104,7 +106,7 @@ public class boatControlAI : MonoBehaviour
         //sets objectiveWaypoints based on mode
         if (bc.rMan.mode == 0)
         {
-            objectiveWaypoints = new Vector3[] { new Vector3(0, 0, 0) }; //TEMPORARY
+            objectiveWaypoints = new GameObject[] { GameObject.Find("/DeathmatchCentre") }; //TEMPORARY
         }
         if (bc.shipClass == boatCombat.Classes.Cutter)
         {
@@ -213,13 +215,12 @@ public class boatControlAI : MonoBehaviour
         //adds objective POIs to poiInfos
         for (int i = 0; i < objectiveWaypoints.Length; i++)
         {
-            poiInfos[colliderToPoi].Set(PoiInfo.Types.ObjectivePoint, objectiveWaypoints[i], this.transform.position);
+            poiInfos[colliderToPoi].Set(PoiInfo.Types.ObjectivePoint, objectiveWaypoints[i].transform.position, this.transform.position);
+            poiObjects[colliderToPoi] = objectiveWaypoints[i];
             if (bc.rMan.mode == 0)
             {
-                poiInfos[colliderToPoi].priority =  10; //if deathmatch, sets objective priority extra low (should only go here if there are no other POIs)
+                poiInfos[colliderToPoi].priority = -10; //if deathmatch, sets objective priority extra low (should only go here if there are no other POIs)
             }
-
-            poiObjects[colliderToPoi] = GameObject.Find("/sun");
 
             colliderToPoi++;
         }
@@ -346,7 +347,7 @@ public class boatControlAI : MonoBehaviour
         for (int i=0;i<al - 2;i++)
         {
             //This ship's waypoint
-            if (!Physics.SphereCast(allWaypoints[i].globalPos, scr, (allWaypoints[al - 2].globalPos - allWaypoints[i].globalPos).normalized,
+            if (!Physics.Raycast(allWaypoints[i].globalPos, (allWaypoints[al - 2].globalPos - allWaypoints[i].globalPos).normalized,
                 out rayHit, Vector3.Distance(allWaypoints[i].globalPos, allWaypoints[al - 2].globalPos), terrainMask))
             {
                 allWaypoints[al - 2].neighbours.Add(allWaypoints[i]);
@@ -357,7 +358,7 @@ public class boatControlAI : MonoBehaviour
             
 
             //target ship's waypoint
-            if (!Physics.SphereCast(allWaypoints[i].globalPos, scr, (allWaypoints[al - 1].globalPos - allWaypoints[i].globalPos).normalized,
+            if (!Physics.Raycast(allWaypoints[i].globalPos, (allWaypoints[al - 1].globalPos - allWaypoints[i].globalPos).normalized,
                 out rayHit, Vector3.Distance(allWaypoints[i].globalPos, allWaypoints[al - 1].globalPos), terrainMask))
             {
                 allWaypoints[i].neighbours.Add(allWaypoints[al - 1]);
@@ -381,8 +382,9 @@ public class boatControlAI : MonoBehaviour
 
         wrf.Clear();
         wrf.Add(new WaypointRoutingInfo());
-        wrf[0].cameFrom.Add(al - 2);
-        wrf[0].wi = (wrf[0].cameFrom[wrf[0].cameFrom.Count - 1]);
+        //wrf[0].cameFrom.Add(al - 2);
+        wrf[0].wi = al - 2;
+        wrf[0].prevWrf = -1;
         wrf[0].costSoFar = 0;
         wrf[0].priority = 0;
         wrf[0].frontier = true;
@@ -391,38 +393,57 @@ public class boatControlAI : MonoBehaviour
         float newCost;
         int niwl; //(allWaypoint) neighbour in wrf list
 
-        for (int k=0;k<100;k++)
+        while (true)
         {
             //Find whichever waypointRoutingInfo has the highest priority, because i don't know how to make a priority queue in Unity
 
             hpi = -1;
             for (int i=0;i<wrf.Count;i++)
             {
-                Debug.Log("wrf entry " + i);
-                Debug.Log("Its priority is " + wrf[i].priority);
+                //Debug.Log("wrf entry " + i);
+                //Debug.Log("Its priority is " + wrf[i].priority);
 
                 if (!wrf[i].frontier)
                 {
-                    Debug.Log("Its not on the frontier");
+                    //Debug.Log("Its not on the frontier");
                 }
-                else if (hpi == -1 || wrf[hpi].priority < wrf[i].priority)
+                else if (hpi == -1 || wrf[hpi].priority > wrf[i].priority)
                 {
                     hpi = i;
                 }
             }
 
-            Debug.Log("Current wrf being looked at is " + hpi);
-            Debug.Log("Its object is " + allWaypoints[wrf[hpi].wi].obj.name);
+            if (hpi == -1)
+            {
+                Debug.Log("Nothing left on the frontier");
+                Debug.Log("Path not found");
+                canReachTarget = false;
+                return;
+            }
+
+            //Debug.Log("Current wrf being looked at is " + hpi);
+            //Debug.Log("Its object is " + allWaypoints[wrf[hpi].wi].obj.name);
 
             //check if the goal has been reached
             if (wrf[hpi].wi == al - 1)
             {
                 //Adds the global position of each of the wrf[hpi]'s cameFroms to the list
-                for (int i = 1; i < wrf[hpi].cameFrom.Count;i++)
+                //for (int i = 1; i < wrf[hpi].cameFrom.Count;i++)
+                //{
+                //    pathingWaypoints.Add(allWaypoints[wrf[hpi].cameFrom[i]].globalPos);
+                //}
+
+                int prev = hpi;
+                while (prev != -1)
                 {
-                    pathingWaypoints.Add(allWaypoints[wrf[hpi].cameFrom[i]].globalPos);
+                    pathingWaypoints.Add(allWaypoints[wrf[prev].wi].globalPos);
+                    prev = wrf[prev].prevWrf;
                 }
+                pathingWaypoints.RemoveAt(pathingWaypoints.Count - 1);
+                pathingWaypoints.RemoveAt(0);
+
                 Debug.Log("Path found");
+                canReachTarget = true;
                 return;
             }
             else
@@ -448,6 +469,7 @@ public class boatControlAI : MonoBehaviour
                                 niwl = -2;
                             }
 
+                            canReachTarget = true;
                             break;
                         }
                     }
@@ -461,6 +483,7 @@ public class boatControlAI : MonoBehaviour
                         {
                             wrf.Add(new WaypointRoutingInfo());
                             niwl = wrf.Count - 1;
+                            wrf[niwl].frontier = true;
                         }
 
                         //Set wrf's values
@@ -468,14 +491,16 @@ public class boatControlAI : MonoBehaviour
                         wrf[niwl].priority = (allWaypoints[wrf[niwl].wi].heuristic) + newCost;
 
                         //Set the cameFrom list to hpi's list, then add the neighbour's address to the end
-                        wrf[niwl].cameFrom.Clear();
-                        for (int j = 0; j < wrf[hpi].cameFrom.Count; j++)
-                        {
-                            wrf[niwl].cameFrom.Add(wrf[hpi].cameFrom[j]);
-                        }
-                        wrf[niwl].cameFrom.Add(allWaypoints[wrf[hpi].wi].neighbourAddresses[i]);
-                        wrf[niwl].wi = (wrf[niwl].cameFrom[wrf[niwl].cameFrom.Count - 1]);
-                        wrf[niwl].frontier = true;
+                        //wrf[niwl].cameFrom.Clear();
+                        //for (int j = 0; j < wrf[hpi].cameFrom.Count; j++)
+                        //{
+                        //    wrf[niwl].cameFrom.Add(wrf[hpi].cameFrom[j]);
+                        //}
+                        //wrf[niwl].cameFrom.Add(allWaypoints[wrf[hpi].wi].neighbourAddresses[i]);
+
+                        wrf[niwl].prevWrf = hpi;
+                        wrf[niwl].wi = allWaypoints[wrf[hpi].wi].neighbourAddresses[i];
+                        //wrf[niwl].frontier = true;
                     }
                 }
             }
@@ -483,10 +508,6 @@ public class boatControlAI : MonoBehaviour
             wrf[hpi].frontier = false;
 
         }
-
-        Debug.Log("Path not found, something's gone wrong");
-
-
     }
 
     void Update()
@@ -512,173 +533,232 @@ public class boatControlAI : MonoBehaviour
                 //Use more rays to check if the route's starting position can still see this ship, and the ending position can still see the target
                 //If not, regenerate the route
                 //note: starting position and ending position should only be actual waypoints, not the positions of the ships themselves
+                if (Physics.Raycast(this.transform.position, (pathingWaypoints[pathingWaypoints.Count - 1] - this.transform.position).normalized,
+                                    out rayHit, Vector3.Distance(pathingWaypoints[pathingWaypoints.Count - 1], this.transform.position), terrainMask))
+                {
+                    GeneratePathingRoute();
+                }
+                else if (Physics.Raycast(poiInfos[targetPoi].globalPos, (pathingWaypoints[0] - poiInfos[targetPoi].globalPos).normalized,
+                                         out rayHit, Vector3.Distance(pathingWaypoints[0], poiInfos[targetPoi].globalPos), terrainMask))
+                {
+                    GeneratePathingRoute();
+                }
             }
 
-            //check all pathingWaypoints to see if the ship's within a certain zone
-            //if so, remove it and everything before it
-
-            if (pathingWaypoints.Count == 0)
+            if (canReachTarget)
             {
-                GeneratePathingRoute();
+                //check all pathingWaypoints to see if the ship's within a certain zone
+                //if so, remove it and everything before it
+                for (int i = 0; i < pathingWaypoints.Count; i++)
+                {
+                    if (Vector3.Distance(this.transform.position, pathingWaypoints[i]) <= 20)
+                    {
+                        while (pathingWaypoints.Count > i)
+                        {
+                            pathingWaypoints.RemoveAt(i);
+                        }
+                    }
+                }
+
+                if (pathingWaypoints.Count == 0)
+                {
+                    GeneratePathingRoute();
+                }
             }
 
-            targetWaypoint = pathingWaypoints[0];
-            pathfinding = true;
+            if (canReachTarget)
+            {
+                targetWaypoint = pathingWaypoints[pathingWaypoints.Count - 1];
+                pathfinding = true;
+            }
+            else
+            {
+                targetWaypoint = poiInfos[targetPoi].globalPos;
+                pathfinding = false;
+            }
+
         }
         else
         {
             targetWaypoint = poiInfos[targetPoi].globalPos;
             pathfinding = false;
+            canReachTarget = true;
         }
         targetWaypointLocal = transform.InverseTransformPoint(targetWaypoint);
         targetWaypointLocal.y = 0;
         targetWaypointAngle = Vector3.SignedAngle(Vector3.forward, targetWaypointLocal, Vector3.up);
 
-        //set stopAtTarget, depending on waypoint type
-        if (poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectivePoint ||
-            poiInfos[targetPoi].poiType == PoiInfo.Types.DyingAlly ||
-            poiInfos[targetPoi].poiType == PoiInfo.Types.DyingEnemy)
+        //To prevent errors if the target is unreachable
+        if (canReachTarget)
         {
-            stopAtTarget = true;
-        }
-        else
-        {
-            stopAtTarget = false;
-        }
-
-        //sets aimingAtTargetPOI, depending on targetPOI type + distance, + this ship class
-        //aimingAtTargetPOI means the ship is positioning itself to fire upon its targetPOI
-        if (poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectiveBoat ||
-            poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
-            poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort)
-        {
-            //Most ships aim their guns if within 30m, cutters get in further, then turn around
-
-            if (bc.shipClass == boatCombat.Classes.Cutter)
+            //set stopAtTarget, depending on waypoint type
+            //stopAtTarget forced to false if pathfinding
+            if (!pathfinding && (poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectivePoint ||
+                poiInfos[targetPoi].poiType == PoiInfo.Types.DyingAlly ||
+                poiInfos[targetPoi].poiType == PoiInfo.Types.DyingEnemy))
             {
-                if (poiInfos[targetPoi].dist <= 20 || (Mathf.Abs(targetWaypointAngle) >= 90 && poiInfos[targetPoi].dist <= 30))
-                {
-                    aimingAtTargetPoi = true;
-                }
-                else { aimingAtTargetPoi = false; }
+                stopAtTarget = true;
             }
             else
             {
-                if (poiInfos[targetPoi].dist <= 30)
-                {
-                    aimingAtTargetPoi = true;
-                }
-                else { aimingAtTargetPoi = false; }
+                stopAtTarget = false;
             }
-        }
-        else
-        {
-            aimingAtTargetPoi = false;
-        }
 
-        //Sorts out movement and steering - acts differently depending on aimingAtTargetPOI
-
-        if (!aimingAtTargetPoi)
-        {
-            //NOT aimingAtTargetPOI - paths towards its target waypoint
-
-            //point towards target waypoint
-            //Doesnt bother if stopAtTarget is enabled AND the target is close enough
-            if (!(stopAtTarget && poiInfos[targetPoi].dist < 5))
+            //sets aimingAtTargetPOI, depending on targetPOI type + distance, + this ship class
+            //aimingAtTargetPOI means the ship is positioning itself to fire upon its targetPOI
+            if (poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectiveBoat ||
+                poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
+                poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort)
             {
-                //when targeting enemy ships, offset their rotation a little bit, to enter a better orbit around their target
-                if ((poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectiveBoat ||
-                     poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat) &&
-                     poiInfos[targetPoi].dist > targetWaypointAimCircleRadius && poiInfos[targetPoi].dist <= 100)
+                //Most ships aim their guns if within 30m, cutters get in further, then turn around
+
+                if (bc.shipClass == boatCombat.Classes.Cutter)
                 {
-                    if (targetWaypointAngle < 0)
+                    if (poiInfos[targetPoi].dist <= 20 || (Mathf.Abs(targetWaypointAngle) >= 90 && poiInfos[targetPoi].dist <= 30))
                     {
-                        targetWaypointAngleCircleAdj = Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                        aimingAtTargetPoi = true;
+                    }
+                    else { aimingAtTargetPoi = false; }
+                }
+                else
+                {
+                    if (poiInfos[targetPoi].dist <= 30)
+                    {
+                        aimingAtTargetPoi = true;
+                    }
+                    else { aimingAtTargetPoi = false; }
+                }
+            }
+            else
+            {
+                aimingAtTargetPoi = false;
+            }
+
+            //Sorts out movement and steering - acts differently depending on aimingAtTargetPOI
+
+            if (!aimingAtTargetPoi || pathfinding)
+            {
+                //NOT aimingAtTargetPOI - paths directly towards its target waypoint
+                //Also happens when pathfinding
+
+                //point towards target waypoint
+                //Doesnt bother if stopAtTarget is enabled AND the target is close enough
+                if (!(stopAtTarget && poiInfos[targetPoi].dist < 5))
+                {
+                    //when targeting enemy ships, offset their rotation a little bit, to enter a better orbit around their target
+                    //only does so when not pathfinding
+                    if (!pathfinding && ((poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectiveBoat ||
+                         poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat) &&
+                         poiInfos[targetPoi].dist > targetWaypointAimCircleRadius && poiInfos[targetPoi].dist <= 100))
+                    {
+                        if (targetWaypointAngle < 0)
+                        {
+                            targetWaypointAngleCircleAdj = Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                        }
+                        else
+                        {
+                            targetWaypointAngleCircleAdj = -1 * Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                        }
                     }
                     else
                     {
-                        targetWaypointAngleCircleAdj = -1 * Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                        targetWaypointAngleCircleAdj = 0;
                     }
+                    steerIn = RotateBoat(targetWaypointAngle + targetWaypointAngleCircleAdj);
                 }
                 else
                 {
                     targetWaypointAngleCircleAdj = 0;
+                    steerIn = 0;
                 }
-                steerIn = RotateBoat(targetWaypointAngle + targetWaypointAngleCircleAdj);
-            }
-            else
-            {
-                targetWaypointAngleCircleAdj = 0;
-                steerIn = 0;
-            }
 
-            //set moveIn
-            //sets to 0 if the target is >45deg away OR
-            //(stopAtTarget enabled AND EITHER the target is close enough, OR its moving fast enough to reach the target just by coasting)
-            if (Mathf.Abs(targetWaypointAngle + targetWaypointAngleCircleAdj) > 45 ||
-                (stopAtTarget && (poiInfos[targetPoi].dist < 5 || (bm.outSpd / bm.rb.linearDamping >= poiInfos[targetPoi].dist))))
-            {
-                moveIn = 0;
+                //set moveIn
+                //sets to 0 if the target is >45deg away OR
+                //(stopAtTarget enabled AND EITHER the target is close enough, OR its moving fast enough to reach the target just by coasting)
+                if (stopAtTarget && (poiInfos[targetPoi].dist < 5 || (bm.outSpd / bm.rb.linearDamping >= poiInfos[targetPoi].dist)))
+                {
+                    stoppingAtTarget = true;
+                }
+                else
+                {
+                    stoppingAtTarget = false;
+                }
+
+                if (Mathf.Abs(targetWaypointAngle + targetWaypointAngleCircleAdj) > 45 || stoppingAtTarget)
+                {
+                    moveIn = 0;
+
+                    //If stopping at its targetPOI, can freely point its guns towards the nearest shootable POI
+                    if (stoppingAtTarget)
+                    {
+                        AimCannonsAtShootable();
+                    }
+                }
+                else
+                {
+                    moveIn = 1;
+                }
             }
             else
             {
+                //aimingAtTargetPOI - max moveIn, rotates its closest cannons towards the target waypoint
+
+                //point guns towards target waypoint - uses targetWaypointAngleAiming to do so
+                if (bc.shipClass == boatCombat.Classes.Cutter)
+                {
+                    //this is to combat an issue where cutters will approach a target sideways, steer the wrong way and slam into their target
+
+                    targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
+
+                    float moveDirToTarget = Vector3.SignedAngle(bm.localMoveDir * -1, targetWaypointLocal, Vector3.up);
+                    float angleToMoveDir = Vector3.SignedAngle(Vector3.forward * -1, bm.localMoveDir * -1, Vector3.up);
+
+                    if ((moveDirToTarget >= 90 || moveDirToTarget <= -90) &&
+                        ((moveDirToTarget < 0 && targetWaypointAngleAiming > 0) ||
+                        (moveDirToTarget > 0 && targetWaypointAngleAiming < 0)))
+                    {
+                        steerIn = RotateBoat(angleToMoveDir);
+                    }
+                    else
+                    {
+                        steerIn = RotateBoat(targetWaypointAngleAiming);
+                    }
+                }
+                else
+                {
+                    //If target is dead ahead or too close, steer away
+                    if (Mathf.Abs(targetWaypointAngle) < 15 || poiInfos[targetPoi].dist < 10)
+                    {
+                        targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
+                        steerIn = RotateBoat(targetWaypointAngleAiming);
+                    }
+                    //Else, only bother steering if you've passed the target
+                    else if (Mathf.Abs(targetWaypointAngle) <= 90)
+                    {
+                        steerIn = 0;
+                    }
+                    else
+                    {
+                        //figures out if the left or right broadside is closer, then aims it towards the target
+                        if (targetWaypointAngle < 0)
+                        {
+                            targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right * -1, targetWaypointLocal, Vector3.up);
+                        }
+                        else
+                        {
+                            targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right, targetWaypointLocal, Vector3.up);
+                        }
+                        steerIn = RotateBoat(targetWaypointAngleAiming);
+                    }
+                }
+
                 moveIn = 1;
             }
         }
         else
         {
-            //aimingAtTargetPOI - max moveIn, rotates its closest cannons towards the target waypoint
-
-            //point guns towards target waypoint - uses targetWaypointAngleAiming to do so
-            if (bc.shipClass == boatCombat.Classes.Cutter)
-            {
-                //this is to combat an issue where cutters will approach a target sideways, steer the wrong way and slam into their target
-
-                targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
-
-                float moveDirToTarget = Vector3.SignedAngle(bm.localMoveDir * -1, targetWaypointLocal, Vector3.up);
-                float angleToMoveDir = Vector3.SignedAngle(Vector3.forward * -1, bm.localMoveDir * -1, Vector3.up);
-
-                if ((moveDirToTarget >= 90 || moveDirToTarget <= -90) &&
-                    ((moveDirToTarget < 0 && targetWaypointAngleAiming > 0) || 
-                    (moveDirToTarget > 0 && targetWaypointAngleAiming < 0)))
-                {
-                    steerIn = RotateBoat(angleToMoveDir);
-                }
-                else
-                {
-                    steerIn = RotateBoat(targetWaypointAngleAiming);
-                }
-            }
-            else
-            {
-                //If target is dead ahead or too close, steer away
-                if (Mathf.Abs(targetWaypointAngle) < 15 || poiInfos[targetPoi].dist < 10)
-                {
-                    targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
-                    steerIn = RotateBoat(targetWaypointAngleAiming);
-                }
-                //Else, only bother steering if you've passed the target
-                else if (Mathf.Abs(targetWaypointAngle) <= 90)
-                {
-                    steerIn = 0;
-                }
-                else 
-                {
-                    //figures out if the left or right broadside is closer, then aims it towards the target
-                    if (targetWaypointAngle < 0)
-                    {
-                        targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right * -1, targetWaypointLocal, Vector3.up);
-                    }
-                    else
-                    {
-                        targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right, targetWaypointLocal, Vector3.up);
-                    }
-                    steerIn = RotateBoat(targetWaypointAngleAiming);
-                }
-            }
-
-            moveIn = 1;
+            moveIn = 0;
+            AimCannonsAtShootable();
         }
 
         bm.SetMovementIn(moveIn);
@@ -773,6 +853,30 @@ public class boatControlAI : MonoBehaviour
     {
         reticle.transform.rotation = input;
     }
+
+    void AimCannonsAtShootable()
+    {
+        if (anythingToShoot)
+        {
+            Vector3 shootWayLoc = transform.InverseTransformPoint(poiInfos[shootablePoi].globalPos);
+            shootWayLoc.y = 0;
+            float shootWayLocAng;
+            if (bc.shipClass == boatCombat.Classes.Cutter)
+            {
+                shootWayLocAng = Vector3.SignedAngle(Vector3.forward * -1, shootWayLoc, Vector3.up);
+            }
+            else if (shootWayLoc.x < 0)
+            {
+                shootWayLocAng = Vector3.SignedAngle(Vector3.right * -1, shootWayLoc, Vector3.up);
+            }
+            else
+            {
+                shootWayLocAng = Vector3.SignedAngle(Vector3.right, shootWayLoc, Vector3.up);
+            }
+
+            steerIn = RotateBoat(shootWayLocAng);
+        }
+    }
 }
 
 
@@ -861,11 +965,12 @@ public class WaypointRoutingInfo
 {
     public bool frontier;
     public float priority;
-    public List<int> cameFrom; //This is a list of allWaypoints indexes, not wrf indexes
+    //public List<int> cameFrom; //This is a list of allWaypoints indexes, not wrf indexes
+    public int prevWrf;
     public int wi; //waypointIndex - The index at the end of cameFrom, / the allWaypoint index currently being looked at
     public float costSoFar;
     public WaypointRoutingInfo()
     {
-        cameFrom = new List<int>();
+        //cameFrom = new List<int>();
     }
 }

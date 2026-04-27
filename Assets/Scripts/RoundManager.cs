@@ -39,8 +39,8 @@ public class RoundManager : MonoBehaviour
     public WaypointInfo[] waypoints;
 
     public Waypoint[] allWaypoints;
-
-
+    LayerMask terrainMask;
+    RaycastHit rayHit;
 
     public ShipInfo[] shipStatuses;
 
@@ -90,25 +90,42 @@ public class RoundManager : MonoBehaviour
         //For each element in allWaypoints, checks if any other elements match any of the neighbours in the relevant object
         //If so, copy the information into allWaypoints
 
+        terrainMask = (1 << LayerMask.NameToLayer("terrain"));
+
         for (int i = 0; i < waypoints.Length; i++)
         {
             for (int j = 0; j < waypoints.Length; j++)
             {
                 if (j != i)
                 {
-                    for (int k = 0; k < waypoints[i].neighbours.Length; k++)
+                    //for (int k = 0; k < waypoints[i].neighbours.Length; k++)
+                    //{
+                    //    if (waypoints[i].neighbours[k] == waypoints[j].gameObject)
+                    //    {
+                    //        allWaypoints[i].neighbours.Add(allWaypoints[j]);
+
+                    //        allWaypoints[i].neighbourAddresses.Add(j);
+
+                    //        allWaypoints[i].neighbourDists.Add
+                    //            (Vector3.Distance(waypoints[i].transform.position, waypoints[j].transform.position));
+
+                    //        allWaypoints[i].neighbourNo += 1;
+                    //    }
+                    //}
+
+                    if (!Physics.SphereCast(allWaypoints[i].globalPos, 5, (allWaypoints[j].globalPos - allWaypoints[i].globalPos).normalized, out rayHit,
+                         Vector3.Distance(allWaypoints[i].globalPos, allWaypoints[j].globalPos), terrainMask))
                     {
-                        if (waypoints[i].neighbours[k] == waypoints[j].gameObject)
-                        {
-                            allWaypoints[i].neighbours.Add(allWaypoints[j]);
+                        allWaypoints[i].neighbours.Add(allWaypoints[j]);
 
-                            allWaypoints[i].neighbourAddresses.Add(j);
+                        allWaypoints[i].neighbourAddresses.Add(j);
 
-                            allWaypoints[i].neighbourDists.Add
-                                (Vector3.Distance(waypoints[i].transform.position, waypoints[j].transform.position));
+                        allWaypoints[i].neighbourDists.Add
+                            (Vector3.Distance(allWaypoints[i].globalPos, allWaypoints[j].globalPos));
 
-                            allWaypoints[i].neighbourNo += 1;
-                        }
+                        allWaypoints[i].neighbourNo += 1;
+
+                        Debug.DrawLine(allWaypoints[i].globalPos, allWaypoints[j].globalPos, Color.yellow, Mathf.Infinity);
                     }
                 }
             }
