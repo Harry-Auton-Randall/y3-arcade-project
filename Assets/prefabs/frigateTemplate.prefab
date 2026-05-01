@@ -871,6 +871,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::boatMove
   rb: {fileID: 0}
+  charge: 0
+  chargeSpeedMult: 1
   outSpd: 0
   outGlbSpd: 0
   outRotSpd: 0
@@ -924,6 +926,10 @@ MonoBehaviour:
   isRepairing: 0
   fireDamageInterval: 5
   fireDamageTotal: 3
+  respawnImmunity: 0
+  shipLength: 0
+  shipWidth: 0
+  mine: {fileID: 6286081957056011833, guid: 7f765e5d80625ff45b6e6d4c64ea6235, type: 3}
 --- !u!4 &3213702982565817347 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0b337cb54e51fdc4380e9b951e504526, type: 3}
@@ -1094,7 +1100,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 70a4936916277804ba4d8b984b33d1d7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.1
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 70a4936916277804ba4d8b984b33d1d7, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1234,7 +1240,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 70a4936916277804ba4d8b984b33d1d7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.1
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 70a4936916277804ba4d8b984b33d1d7, type: 3}
       propertyPath: m_LocalPosition.z

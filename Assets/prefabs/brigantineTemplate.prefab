@@ -1255,6 +1255,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::boatMove
   rb: {fileID: 0}
+  charge: 0
+  chargeSpeedMult: 1
   outSpd: 0
   outGlbSpd: 0
   outRotSpd: 0
@@ -1308,6 +1310,10 @@ MonoBehaviour:
   isRepairing: 0
   fireDamageInterval: 5
   fireDamageTotal: 3
+  respawnImmunity: 0
+  shipLength: 0
+  shipWidth: 0
+  mine: {fileID: 6286081957056011833, guid: 7f765e5d80625ff45b6e6d4c64ea6235, type: 3}
 --- !u!4 &8666721135083490976 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}

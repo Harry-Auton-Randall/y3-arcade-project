@@ -96,6 +96,10 @@ public class boatCombat : MonoBehaviour
     //boat dimensions
     public float shipLength, shipWidth;
 
+    //special stuff
+    public GameObject mine;
+    GameObject instance;
+
     void Awake()
     {
         volleying = 0;
@@ -128,7 +132,7 @@ public class boatCombat : MonoBehaviour
                 break;
 
             case Classes.Brigantine:
-                speed = 10f;
+                speed = 9.5f;
                 rotate = 80f;
                 maxHealth = 15;
                 maxReload = 4f;
@@ -290,32 +294,35 @@ public class boatCombat : MonoBehaviour
 
     public void TakeDamage(int damage, bool fire, bool chain, int shooterIDIn)
     {
-        health -= damage;
-
-        //Updates latestDamageID and burnID if the damager isn't part of the environment (-1), self-harm (gameID) or a teammate (team stuff)
-        if (shooterIDIn != -1 && shooterIDIn != gameID &&
-            (rMan.shipStatuses[shooterIDIn].team != team || rMan.shipStatuses[shooterIDIn].team == 0))
+        if (!respawnImmunity)
         {
-            latestDamageID = shooterIDIn;
+            health -= damage;
+
+            //Updates latestDamageID and burnID if the damager isn't part of the environment (-1), self-harm (gameID) or a teammate (team stuff)
+            if (shooterIDIn != -1 && shooterIDIn != gameID &&
+                (rMan.shipStatuses[shooterIDIn].team != team || rMan.shipStatuses[shooterIDIn].team == 0))
+            {
+                latestDamageID = shooterIDIn;
+                if (fire)
+                {
+                    latestFireID = shooterIDIn;
+                }
+            }
+            if (health <= 0)
+            {
+                health = 0;
+                Sink();
+            }
             if (fire)
             {
-                latestFireID = shooterIDIn;
+                onFire = true;
+                fireDuration = 0;
+                fireDamage = 0;
             }
-        }
-        if (health <= 0)
-        {
-            health = 0;
-            Sink();
-        }
-        if (fire)
-        {
-            onFire = true;
-            fireDuration = 0;
-            fireDamage = 0;
-        }
-        if (chain)
-        {
-            chained = true;
+            if (chain)
+            {
+                chained = true;
+            }
         }
     }
 
@@ -738,6 +745,12 @@ public class boatCombat : MonoBehaviour
 
                 reloadR = 0;
             }
+
+            //TEMPORARY
+            instance = Instantiate(mine);
+            instance.transform.position = this.transform.position - (this.transform.forward * ((shipLength / 2f) + 0.6f));
+            instance.transform.rotation = this.transform.rotation;
+            instance.GetComponent<Mine>().SetStuff(gameID, rb.linearVelocity);
         }
         else
         {
