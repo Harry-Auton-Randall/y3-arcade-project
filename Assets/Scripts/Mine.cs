@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Mine : MonoBehaviour
 {
@@ -17,9 +18,12 @@ public class Mine : MonoBehaviour
     float duration = -1;
     float time = 0;
 
+    //pushingZone stuff
+    Vector3 totalPushForce;
+    List<GameObject> pushingZones;
+
     public void SetStuff(int idIn, Vector3 parentVel)
     {
-        rb = GetComponent<Rigidbody>();
         spawnerID = idIn;
         rb.linearVelocity = parentVel + (transform.forward * -3);
         duration = 60;
@@ -38,7 +42,9 @@ public class Mine : MonoBehaviour
 
     void Awake()
     {
+        rb = GetComponent<Rigidbody>();
         damagerMask = ((1 << LayerMask.NameToLayer("boat")) | (1 << LayerMask.NameToLayer("mine")));
+        pushingZones = new List<GameObject>();
     }
     void Update()
     {
@@ -50,14 +56,47 @@ public class Mine : MonoBehaviour
                 Destroy(this.gameObject);
             }
         }
+
+        //copied from boatMove
+        totalPushForce = Vector3.zero;
+        for (int i = 0; i < pushingZones.Count; i++)
+        {
+            totalPushForce += (pushingZones[i].transform.forward);
+        }
+        if (totalPushForce != Vector3.zero)
+        {
+            totalPushForce.Normalize();
+            rb.AddForce(totalPushForce * rb.mass * rb.linearDamping * -4);
+        }
     }
 
-    void OnCollisionEnter(Collision collision)
+    void OnCollisionStay(Collision collision)
     {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("boat")
-            || collision.gameObject.layer == LayerMask.NameToLayer("mine"))
+        if (collision.gameObject.layer == LayerMask.NameToLayer("boat"))
+        {
+            if (collision.gameObject.GetComponent<boatCombat>().respawnImmunity == false)
+            {
+                Detonate();
+            }
+        }
+        else if (collision.gameObject.layer == LayerMask.NameToLayer("mine"))
         {
             Detonate();
+        }
+    }
+    void OnTriggerEnter(Collider collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("PushingZone")
+            && !(pushingZones.Contains(collision.gameObject)))
+        {
+            pushingZones.Add(collision.gameObject);
+        }
+    }
+    void OnTriggerExit(Collider collision)
+    {
+        if (pushingZones.Contains(collision.gameObject))
+        {
+            pushingZones.Remove(collision.gameObject);
         }
     }
 
@@ -95,7 +134,7 @@ public class Mine : MonoBehaviour
 
                 if (nearbyDamagers[i].transform.parent.gameObject.layer == LayerMask.NameToLayer("boat"))
                 {
-                    nearbyDamagers[i].transform.parent.GetComponent<boatCombat>().TakeDamage(16, false, false, -1);
+                    nearbyDamagers[i].transform.parent.GetComponent<boatCombat>().TakeDamage(16, false, false, spawnerID);
                 }
                 else if (nearbyDamagers[i].transform.parent.gameObject.layer == LayerMask.NameToLayer("mine"))
                 {

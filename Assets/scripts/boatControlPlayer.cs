@@ -21,7 +21,7 @@ public class boatControlPlayer : MonoBehaviour
 
     //Input system stuff
     InputActionMap mainActions;
-    InputAction movementA, rotationA, camRotCWA, camRotCCWA, shootA, spyglassA, repairA;
+    InputAction movementA, rotationA, camRotCWA, camRotCCWA, shootA, spyglassA, repairA, specialA;
     InputAction ammoForwardA, ammoBackwardA, numBar1A, numBar2A, numBar3A, numBar4A;
 
     bool usingSpyglass;
@@ -51,6 +51,7 @@ public class boatControlPlayer : MonoBehaviour
         shootA = mainActions.FindAction("Shoot");
         spyglassA = mainActions.FindAction("Spyglass");
         repairA = mainActions.FindAction("Repair");
+        specialA = mainActions.FindAction("Special");
 
         ammoForwardA = mainActions.FindAction("AmmoForward");
         ammoBackwardA = mainActions.FindAction("AmmoBackward");
@@ -76,6 +77,7 @@ public class boatControlPlayer : MonoBehaviour
         camRotCWA.performed += OnCamRotCW;
         camRotCCWA.performed += OnCamRotCCW;
         shootA.performed += OnShoot;
+        specialA.performed += OnSpecial;
 
         ammoForwardA.performed += OnAmmoForward;
         ammoBackwardA.performed += OnAmmoBackward;
@@ -90,6 +92,7 @@ public class boatControlPlayer : MonoBehaviour
         camRotCWA.performed -= OnCamRotCW;
         camRotCCWA.performed -= OnCamRotCCW;
         shootA.performed -= OnShoot;
+        specialA.performed -= OnSpecial;
 
         ammoForwardA.performed -= OnAmmoForward;
         ammoBackwardA.performed -= OnAmmoBackward;
@@ -113,6 +116,10 @@ public class boatControlPlayer : MonoBehaviour
         {
             bc.Shoot();
         }
+    }
+    void OnSpecial(InputAction.CallbackContext context)
+    {
+        bc.UseSpecial();
     }
 
     void OnAmmoForward(InputAction.CallbackContext context)

@@ -82,9 +82,9 @@ public class boatCombat : MonoBehaviour
 
     Collider hullCollider;
 
-    boatMove bm;
+    public boatMove bm;
 
-    Rigidbody rb;
+    public Rigidbody rb;
 
     //respawn-immunity stuff
     LayerMask boatMask;
@@ -99,6 +99,8 @@ public class boatCombat : MonoBehaviour
     //special stuff
     public GameObject mine;
     GameObject instance;
+    bool specialRunning;
+    Coroutine specialCo;
 
     void Awake()
     {
@@ -108,7 +110,7 @@ public class boatCombat : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rMan = GameObject.Find("RoundManager").GetComponent<RoundManager>();
 
-        boatMask = (1 << LayerMask.NameToLayer("boat")) | (1 << LayerMask.NameToLayer("boatRam"));
+        boatMask = (1 << LayerMask.NameToLayer("boat")) | (1 << LayerMask.NameToLayer("boatRam")) | (1 << LayerMask.NameToLayer("mine"));
 
         //Set stats and cannons based on class
         switch (shipClass)
@@ -551,7 +553,7 @@ public class boatCombat : MonoBehaviour
         }
         if (reloadSpecial > maxReloadSpecial)
         {
-            reloadSpecial = Time.deltaTime;
+            reloadSpecial = maxReloadSpecial;
         }
 
         //Sort out valid cannon aiming
@@ -745,12 +747,6 @@ public class boatCombat : MonoBehaviour
 
                 reloadR = 0;
             }
-
-            //TEMPORARY
-            instance = Instantiate(mine);
-            instance.transform.position = this.transform.position - (this.transform.forward * ((shipLength / 2f) + 0.6f));
-            instance.transform.rotation = this.transform.rotation;
-            instance.GetComponent<Mine>().SetStuff(gameID, rb.linearVelocity);
         }
         else
         {
@@ -805,6 +801,46 @@ public class boatCombat : MonoBehaviour
                 reloadR = 0;
             }
         }
+    }
+
+    public void UseSpecial()
+    {
+        if (reloadSpecial >= maxReload && !specialRunning)
+        {
+            switch (shipClass)
+            {
+                case Classes.Cutter:
+                    instance = Instantiate(mine);
+                    instance.transform.position = this.transform.position - (this.transform.forward * ((shipLength / 2f) + 0.6f));
+                    instance.transform.rotation = this.transform.rotation;
+                    instance.GetComponent<Mine>().SetStuff(gameID, rb.linearVelocity);
+                    break;
+                case Classes.Brigantine:
+                    specialRunning = true;
+                    specialCo = StartCoroutine(ChargeSpecial());
+                    break;
+                case Classes.Frigate:
+                    break;
+                case Classes.Galleon:
+                    specialRunning = true;
+                    break;
+            }
+            reloadSpecial = 0;
+        }
+    }
+
+    IEnumerator ChargeSpecial()
+    {
+        bm.charge = true;
+        yield return new WaitForSeconds(3f);
+        bm.charge = false;
+        specialRunning = false;
+    }
+    public void EndCharge()
+    {
+        StopCoroutine(specialCo);
+        bm.charge = false;
+        specialRunning = false;
     }
 
     IEnumerator VolleyFire(int[] volleyOrder, GameObject[] broadside, bool isPlayer1, int selectedAmmo1)

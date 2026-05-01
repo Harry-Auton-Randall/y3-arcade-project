@@ -20,6 +20,7 @@ public class boatMove : MonoBehaviour
     public bool charge = false;
     public float chargeSpeedMult = 1f;
 
+    //outputs
     public float outSpd, outGlbSpd, outRotSpd;
     public Vector3 globalMoveDir, localMoveDir;
 

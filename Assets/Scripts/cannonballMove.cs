@@ -88,6 +88,12 @@ public class cannonballMove : MonoBehaviour
                     //Debug.Log("Hit an immune boat");
                 }
             }
+            //mine hit
+            else if (collision.gameObject.layer == LayerMask.NameToLayer("mine"))
+            {
+                collision.transform.parent.GetComponent<Mine>().Detonate();
+                Destroy(this.gameObject);
+            }
             //terrain hit
             else
             {
