@@ -1297,6 +1297,9 @@ MonoBehaviour:
   shipLength: 0
   shipWidth: 0
   mine: {fileID: 6286081957056011833, guid: 7f765e5d80625ff45b6e6d4c64ea6235, type: 3}
+  mortar: {fileID: 3999773309614538358, guid: 0f99e7b1e33e1fd4ba137e8633475286, type: 3}
+  aimingMortar: 0
+  mortarAimPos: {x: 0, y: 0}
 --- !u!1001 &7795064720009835483
 PrefabInstance:
   m_ObjectHideFlags: 0

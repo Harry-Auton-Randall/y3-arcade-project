@@ -5,11 +5,13 @@ using System.Collections.Generic;
 public class Mine : MonoBehaviour
 {
     int spawnerID = -1;
+    bool shot = false;
     float radius = 5;
     Collider[] nearbyDamagers;
     LayerMask damagerMask;
     int nearbyDamagerCount;
     Rigidbody rb;
+    public bool detonating = false;
 
     Collider[] startDam = new Collider[1];
     int startDamCount = 0;
@@ -22,7 +24,7 @@ public class Mine : MonoBehaviour
     Vector3 totalPushForce;
     List<GameObject> pushingZones;
 
-    public void SetStuff(int idIn, Vector3 parentVel)
+    public void Init(int idIn, Vector3 parentVel)
     {
         spawnerID = idIn;
         rb.linearVelocity = parentVel + (transform.forward * -3);
@@ -100,9 +102,10 @@ public class Mine : MonoBehaviour
         }
     }
 
+    //Detonate and DetonateDelay2 are for making the mine wait a frame before detonating
+    //previously needed for mines detonating other mines to not get stuck in an infinite loop, before the "detonating" bool was added
     public void DetonateDelay()
     {
-        //Debug.Log("I was detonated by another mine");
         StartCoroutine(DetonateDelay2());
     }
     IEnumerator DetonateDelay2()
@@ -110,9 +113,24 @@ public class Mine : MonoBehaviour
         yield return null;
         Detonate();
     }
+    public void DetonateShot(int idIn, bool delay)
+    {
+        shot = true;
+        spawnerID = idIn;
+        if (delay)
+        {
+            DetonateDelay();
+        }
+        else
+        {
+            Detonate();
+        }
+    }
 
     public void Detonate()
     {
+        detonating = true;
+
         nearbyDamagers = new Collider[GameObject.Find("/RoundManager").GetComponent<RoundManager>().totalShips + 10]; //+10 temporary
 
         nearbyDamagerCount = Physics.OverlapSphereNonAlloc(this.transform.position, radius, nearbyDamagers, damagerMask);
@@ -134,11 +152,21 @@ public class Mine : MonoBehaviour
 
                 if (nearbyDamagers[i].transform.parent.gameObject.layer == LayerMask.NameToLayer("boat"))
                 {
-                    nearbyDamagers[i].transform.parent.GetComponent<boatCombat>().TakeDamage(16, false, false, spawnerID);
+                    nearbyDamagers[i].transform.parent.GetComponent<boatCombat>().TakeDamage(14, false, false, spawnerID);
                 }
                 else if (nearbyDamagers[i].transform.parent.gameObject.layer == LayerMask.NameToLayer("mine"))
                 {
-                    nearbyDamagers[i].transform.parent.GetComponent<Mine>().DetonateDelay();
+                    if (!(nearbyDamagers[i].transform.parent.GetComponent<Mine>().detonating))
+                    {
+                        if (shot)
+                        {
+                            nearbyDamagers[i].transform.parent.GetComponent<Mine>().DetonateShot(spawnerID, false);
+                        }
+                        else
+                        {
+                            nearbyDamagers[i].transform.parent.GetComponent<Mine>().Detonate();
+                        }
+                    }
                 }
             }
         }

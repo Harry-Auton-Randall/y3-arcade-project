@@ -638,7 +638,7 @@ GameObject:
   - component: {fileID: 598306824494171397}
   - component: {fileID: 7270245041879293045}
   - component: {fileID: 7086969551115951617}
-  m_Layer: 7
+  m_Layer: 8
   m_Name: ramTip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1379,10 +1379,15 @@ MonoBehaviour:
   isRepairing: 0
   fireDamageInterval: 5
   fireDamageTotal: 3
+  bm: {fileID: 0}
+  rb: {fileID: 0}
   respawnImmunity: 0
   shipLength: 0
   shipWidth: 0
   mine: {fileID: 6286081957056011833, guid: 7f765e5d80625ff45b6e6d4c64ea6235, type: 3}
+  mortar: {fileID: 3999773309614538358, guid: 0f99e7b1e33e1fd4ba137e8633475286, type: 3}
+  aimingMortar: 0
+  mortarAimPos: {x: 0, y: 0}
 --- !u!4 &8666721135083490976 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2944856c0f48eb14dabe31fa13bce6e6, type: 3}

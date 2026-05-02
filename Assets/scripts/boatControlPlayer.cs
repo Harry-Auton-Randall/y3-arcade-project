@@ -119,7 +119,10 @@ public class boatControlPlayer : MonoBehaviour
     }
     void OnSpecial(InputAction.CallbackContext context)
     {
-        bc.UseSpecial();
+        if (!(bc.shipClass == boatCombat.Classes.Frigate && !bc.aimingMortar) && !bc.isRepairing)
+        {
+            bc.UseSpecial();
+        }
     }
 
     void OnAmmoForward(InputAction.CallbackContext context)
@@ -200,6 +203,23 @@ public class boatControlPlayer : MonoBehaviour
             {
                 bc.aimPos.x = 0;
                 bc.aimPos.y = 0;
+            }
+
+            if (bc.shipClass == boatCombat.Classes.Frigate)
+            {
+                if (usingSpyglass && !bc.isRepairing)
+                {
+                    bc.mortarAimPos.x = reticle.transform.localPosition.x;
+                    bc.mortarAimPos.y = reticle.transform.localPosition.z;
+                    bc.aimingMortar = true;
+                }
+                else
+                {
+                    bc.mortarAimPos.x = 0;
+                    bc.mortarAimPos.y = 0;
+                    bc.aimingMortar = false;
+                }
+                bc.MoveMortarOutline();
             }
         }
         reticle.transform.rotation = Quaternion.Euler(0,cc.cameraRotYGrad,0);

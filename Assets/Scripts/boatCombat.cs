@@ -97,11 +97,13 @@ public class boatCombat : MonoBehaviour
     public float shipLength, shipWidth;
 
     //special stuff
-    public GameObject mine;
+    public GameObject mine, mortar;
     GameObject instance;
     bool specialRunning;
     Coroutine specialCo;
-    Renderer barrageOutline;
+    Renderer bomo; //barrage-or-mortar outline
+    public bool aimingMortar;
+    public Vector2 mortarAimPos;
 
     void Awake()
     {
@@ -257,8 +259,13 @@ public class boatCombat : MonoBehaviour
         }
         if (shipClass == Classes.Galleon)
         {
-            barrageOutline = transform.Find("barrageOutline").GetComponent<Renderer>();
-            barrageOutline.enabled = false;
+            bomo = transform.Find("barrageOutline").GetComponent<Renderer>();
+            bomo.enabled = false;
+        }
+        else if (shipClass == Classes.Frigate)
+        {
+            bomo = transform.Find("dangerCircle16").GetComponent<Renderer>();
+            bomo.enabled = false;
         }
 
         maxReload = maxReload / reloadMult;
@@ -293,7 +300,18 @@ public class boatCombat : MonoBehaviour
 
         if (shipClass == Classes.Galleon)
         {
-            barrageOutline.material = cannonRangeMat;
+            bomo.material = cannonRangeMat;
+        }
+        else if (shipClass == Classes.Frigate)
+        {
+            if (isPlayer || (team == rMan.playerTeam && team != 0))
+            {
+                bomo.materials = new Material[] { cannonRangeMatEmpty, Resources.Load("SolidMaterials/white10", typeof(Material)) as Material };
+            }
+            else
+            {
+                bomo.materials = new Material[] { cannonRangeMatEmpty, Resources.Load("SolidMaterials/red20", typeof(Material)) as Material };
+            }
         }
 
         if (respawning)
@@ -369,7 +387,7 @@ public class boatCombat : MonoBehaviour
 
     public void AttemptRepair(float n)
     {
-        if (n > 0 && ((health < maxHealth && wood > 0) || onFire || chained))
+        if (n > 0 && ((health < maxHealth && wood > 0) || onFire || chained) && !specialRunning)
         {
             //NOTE: order of priority is: dousing fires, unchaining, normal repairs
             isRepairing = true;
@@ -768,6 +786,7 @@ public class boatCombat : MonoBehaviour
         {
             if (goodAimR && (reloadR >= maxReload))
             {
+                volleying++;
                 if(isPlayer || (team == rMan.playerTeam && team != 0))
                 {
                     cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, true, selectedAmmo, hullCollider, gameID);
@@ -776,6 +795,7 @@ public class boatCombat : MonoBehaviour
                 {
                     cannonsR[0].GetComponent<cannonShoot>().Shoot(40, 0.75f, false, selectedAmmo, hullCollider, gameID);
                 }
+                StartCoroutine(VolleyingDelay());
 
                 if (selectedAmmo != 0)
                 {
@@ -794,8 +814,8 @@ public class boatCombat : MonoBehaviour
         {
             if (goodAimL && (reloadL >= maxReload))
             {
-                StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, selectedAmmo, 1));
                 volleying++;
+                StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, selectedAmmo, 1));
 
                 if (selectedAmmo != 0)
                 {
@@ -811,8 +831,8 @@ public class boatCombat : MonoBehaviour
             }
             else if (goodAimR && (reloadR >= maxReload))
             {
-                StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, selectedAmmo, 1));
                 volleying++;
+                StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, selectedAmmo, 1));
 
                 if (selectedAmmo != 0)
                 {
@@ -828,10 +848,23 @@ public class boatCombat : MonoBehaviour
             }
         }
     }
+    public void MoveMortarOutline()
+    {
+        if (aimingMortar && reloadSpecial >= maxReloadSpecial)
+        {
+            bomo.enabled = true;
+            bomo.transform.localPosition = new Vector3(mortarAimPos.x, bomo.transform.localPosition.y, mortarAimPos.y);
+        }
+        else
+        {
+            bomo.enabled = false;
+            bomo.transform.localPosition = new Vector3(0, bomo.transform.localPosition.y, 0);
+        }
+    }
 
     public void UseSpecial()
     {
-        if (reloadSpecial >= maxReload && !specialRunning)
+        if (reloadSpecial >= maxReloadSpecial && !specialRunning)
         {
             switch (shipClass)
             {
@@ -839,13 +872,24 @@ public class boatCombat : MonoBehaviour
                     instance = Instantiate(mine);
                     instance.transform.position = this.transform.position - (this.transform.forward * ((shipLength / 2f) + 0.6f));
                     instance.transform.rotation = this.transform.rotation;
-                    instance.GetComponent<Mine>().SetStuff(gameID, rb.linearVelocity);
+
+                    instance.GetComponent<Mine>().Init(gameID, rb.linearVelocity);
                     break;
                 case Classes.Brigantine:
                     specialRunning = true;
                     specialCo = StartCoroutine(ChargeSpecial());
                     break;
                 case Classes.Frigate:
+                    instance = Instantiate(mortar);
+                    instance.transform.position = new Vector3(bomo.transform.position.x, 0, bomo.transform.position.z);
+                    if (isPlayer || (team == rMan.playerTeam && team != 0))
+                    {
+                        instance.GetComponent<MortarShot>().Init(gameID, true);
+                    }
+                    else
+                    {
+                        instance.GetComponent<MortarShot>().Init(gameID, false);
+                    }
                     break;
                 case Classes.Galleon:
                     specialRunning = true;
@@ -871,7 +915,7 @@ public class boatCombat : MonoBehaviour
     }
     IEnumerator BarrageSpecial()
     {
-        barrageOutline.enabled = true;
+        bomo.enabled = true;
         for (int i=0;i<cannonsL.Length;i++)
         {
             cannonsL[i].transform.localRotation = Quaternion.Euler(0, 270, 0);
@@ -891,7 +935,7 @@ public class boatCombat : MonoBehaviour
             StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, 0, 1));
             yield return new WaitUntil(() => volleying == 0);
         }
-        barrageOutline.enabled = false;
+        bomo.enabled = false;
         reloadL = 0;
         reloadR = 0;
         specialRunning = false;
@@ -923,6 +967,13 @@ public class boatCombat : MonoBehaviour
             }
             yield return new WaitForSeconds(volleyFireRate);
         }
+        volleying--;
+    }
+
+    IEnumerator VolleyingDelay()
+    {
+        yield return null;
+        yield return null;
         volleying--;
     }
 }

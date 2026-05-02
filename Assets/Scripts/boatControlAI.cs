@@ -684,7 +684,7 @@ public class boatControlAI : MonoBehaviour
                     stoppingAtTarget = false;
                 }
 
-                if (Mathf.Abs(targetWaypointAngle + targetWaypointAngleCircleAdj) > 45 || stoppingAtTarget)
+                if (Mathf.Abs(targetWaypointAngle + targetWaypointAngleCircleAdj) > 15 || stoppingAtTarget)
                 {
                     moveIn = 0;
 

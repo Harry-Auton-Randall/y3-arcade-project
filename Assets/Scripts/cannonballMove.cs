@@ -67,8 +67,8 @@ public class cannonballMove : MonoBehaviour
 
     void OnTriggerEnter(Collider collision)
     {
-        //Ignores the boat that shot it, also triggers
-        if (collision != ignore && !collision.isTrigger)
+        //Ignores the boat that shot it, boat rams, and triggers
+        if (collision != ignore && !collision.isTrigger && collision.gameObject.layer != LayerMask.NameToLayer("boatRam"))
         {
             //boat hit
             if (collision.gameObject.layer == LayerMask.NameToLayer("boat"))
@@ -91,7 +91,7 @@ public class cannonballMove : MonoBehaviour
             //mine hit
             else if (collision.gameObject.layer == LayerMask.NameToLayer("mine"))
             {
-                collision.transform.parent.GetComponent<Mine>().Detonate();
+                collision.transform.parent.GetComponent<Mine>().DetonateShot(shooterID, false);
                 Destroy(this.gameObject);
             }
             //terrain hit
