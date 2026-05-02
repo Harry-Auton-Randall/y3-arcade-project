@@ -101,6 +101,7 @@ public class boatCombat : MonoBehaviour
     GameObject instance;
     bool specialRunning;
     Coroutine specialCo;
+    Renderer barrageOutline;
 
     void Awake()
     {
@@ -254,6 +255,11 @@ public class boatCombat : MonoBehaviour
         {
             cannonRangeDefaultRot = cannonRangeBoneL.localEulerAngles;
         }
+        if (shipClass == Classes.Galleon)
+        {
+            barrageOutline = transform.Find("barrageOutline").GetComponent<Renderer>();
+            barrageOutline.enabled = false;
+        }
 
         maxReload = maxReload / reloadMult;
 
@@ -285,7 +291,12 @@ public class boatCombat : MonoBehaviour
             cannonRangeMatEmpty = Resources.Load("SolidMaterials/red10", typeof(Material)) as Material;
         }
 
-        if(respawning)
+        if (shipClass == Classes.Galleon)
+        {
+            barrageOutline.material = cannonRangeMat;
+        }
+
+        if (respawning)
         {
             respawnTime = 0;
             rb.excludeLayers = boatMask;
@@ -557,164 +568,195 @@ public class boatCombat : MonoBehaviour
         }
 
         //Sort out valid cannon aiming
-        if (shipClass == Classes.Cutter)
+        if (shipClass == Classes.Galleon && specialRunning)
         {
-            if ((aimPos.y - cannonCentreR.y < -1 * (aimPos.x - cannonCentreR.x))
-             && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x))
-            {
-                cannonRangeR.enabled = true;
-                goodAimR = true;
-                cannonsR[0].transform.localRotation = Quaternion.Euler(0, Mathf.Atan2(aimPos.x - cannonCentreR.x, aimPos.y - cannonCentreR.y) * Mathf.Rad2Deg, 0);
-                reloadProgress = 100 * (reloadR / maxReload);
-            }
-            else
-            {
-                cannonRangeR.enabled = false;
-                goodAimR = false;
-                cannonsR[0].transform.localRotation = Quaternion.Euler(0, 180, 0);
-                reloadProgress = 0;
-            }
+            goodAimL = false;
+            goodAimR = false;
+            reloadProgress = 0;
+
+            cannonRangeL.enabled = false;
+            cannonRangeR.enabled = false;
+
+            //TEMPORARY
+            //cannonRangeL.enabled = true;
+            //cannonRangeR.enabled = true;
+
+            //cannonRangeDefaultRot.y = -180;
+            //cannonRangeBoneL.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
+            //cannonRangeBoneL2.localRotation = Quaternion.Euler(0, 0, 0);
+            //cannonRangeDefaultRot.y = 180;
+            //cannonRangeBoneR.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
+            //cannonRangeBoneR2.localRotation = Quaternion.Euler(0, 0, 0);
         }
         else
         {
-            //Determines which broadside (if any) is valid, determines goodAim values + reloadProgress
-            if ((aimPos.y - cannonCentreL.y < -1 * (aimPos.x - cannonCentreL.x))
-             && (aimPos.y - cannonCentreL.y > aimPos.x - cannonCentreL.x)
-             && (aimPos.x <= -1 * cannonXDist))
+            if (shipClass == Classes.Cutter)
             {
-                goodAimL = true;
-                goodAimR = false;
-                reloadProgress = 100 * (reloadL / maxReload);
-            }
-            else if ((aimPos.y - cannonCentreR.y > -1 * (aimPos.x - cannonCentreR.x))
-                  && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x)
-                  && (aimPos.x >= cannonXDist))
-            {
-                goodAimR = true;
-                goodAimL = false;
-                reloadProgress = 100 * (reloadR / maxReload);
-            }
-            else
-            {
-                goodAimR = false;
-                goodAimL = false;
-                reloadProgress = 0;
-            }
-            
-            //Sorts out cannonRanges / rotations based on goodAim values
-            //Left first
-            if (goodAimL)
-            {
-                cannonRangeL.enabled = true;
-                if (shipClass == Classes.Brigantine)
+                if ((aimPos.y - cannonCentreR.y < -1 * (aimPos.x - cannonCentreR.x))
+                 && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x))
                 {
-                    cannonRangeL2.enabled = true;
-                    for (int i = 0; i < cannonsL.Length; i++)
-                    {
-                        cannonsL[i].transform.localRotation = Quaternion.Euler(0,
-                            Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonsL[i].transform.localPosition.x, aimPos.y - cannonsL[i].transform.localPosition.z) * Mathf.Rad2Deg, -135f, -45f),
-                            0);
-                    }
+                    cannonRangeR.enabled = true;
+                    goodAimR = true;
+                    cannonsR[0].transform.localRotation = Quaternion.Euler(0, Mathf.Atan2(aimPos.x - cannonCentreR.x, aimPos.y - cannonCentreR.y) * Mathf.Rad2Deg, 0);
+                    reloadProgress = 100 * (reloadR / maxReload);
                 }
                 else
                 {
-                    cannonRangeDefaultRot.y = Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonCentreL2.x, aimPos.y - cannonCentreL2.y) * Mathf.Rad2Deg, -135f, -45f) - 90;
-                    cannonRangeBoneL.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
-                    cannonRangeBoneL2.localRotation = Quaternion.Euler(0, 0, -1 * (cannonRangeDefaultRot.y + 180));
-                    for (int i = 0; i < cannonsL.Length; i++)
-                    {
-                        cannonsL[i].transform.localRotation = Quaternion.Euler(0, cannonRangeDefaultRot.y + 90, 0);
-                    }
+                    cannonRangeR.enabled = false;
+                    goodAimR = false;
+                    cannonsR[0].transform.localRotation = Quaternion.Euler(0, 180, 0);
+                    reloadProgress = 0;
                 }
             }
             else
             {
-                cannonRangeL.enabled = false;
-                if (shipClass == Classes.Brigantine)
+                //Determines which broadside (if any) is valid, determines goodAim values + reloadProgress
+                if ((aimPos.y - cannonCentreL.y < -1 * (aimPos.x - cannonCentreL.x))
+                 && (aimPos.y - cannonCentreL.y > aimPos.x - cannonCentreL.x)
+                 && (aimPos.x <= -1 * cannonXDist))
                 {
-                    cannonRangeL2.enabled = false;
+                    goodAimL = true;
+                    goodAimR = false;
+                    reloadProgress = 100 * (reloadL / maxReload);
                 }
-                for (int i = 0; i < cannonsL.Length; i++)
+                else if ((aimPos.y - cannonCentreR.y > -1 * (aimPos.x - cannonCentreR.x))
+                      && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x)
+                      && (aimPos.x >= cannonXDist))
                 {
-                    cannonsL[i].transform.localRotation = Quaternion.Euler(0,270,0);
+                    goodAimR = true;
+                    goodAimL = false;
+                    reloadProgress = 100 * (reloadR / maxReload);
                 }
-            }
+                else
+                {
+                    goodAimR = false;
+                    goodAimL = false;
+                    reloadProgress = 0;
+                }
 
-            //Right second
-            if (goodAimR)
-            {
-                cannonRangeR.enabled = true;
-                if (shipClass == Classes.Brigantine)
+                //Sorts out cannonRanges / rotations based on goodAim values
+                //Left first
+                if (goodAimL)
                 {
-                    cannonRangeR2.enabled = true;
-                    for (int i = 0; i < cannonsR.Length; i++)
+                    cannonRangeL.enabled = true;
+                    if (shipClass == Classes.Brigantine)
                     {
-                        cannonsR[i].transform.localRotation = Quaternion.Euler(0,
-                            Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonsR[i].transform.localPosition.x, aimPos.y - cannonsR[i].transform.localPosition.z) * Mathf.Rad2Deg, 45f, 135f),
-                            0);
+                        cannonRangeL2.enabled = true;
+                        for (int i = 0; i < cannonsL.Length; i++)
+                        {
+                            cannonsL[i].transform.localRotation = Quaternion.Euler(0,
+                                Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonsL[i].transform.localPosition.x, aimPos.y - cannonsL[i].transform.localPosition.z) * Mathf.Rad2Deg, -135f, -45f),
+                                0);
+                        }
+                    }
+                    else
+                    {
+                        cannonRangeDefaultRot.y = Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonCentreL2.x, aimPos.y - cannonCentreL2.y) * Mathf.Rad2Deg, -135f, -45f) - 90;
+                        cannonRangeBoneL.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
+                        cannonRangeBoneL2.localRotation = Quaternion.Euler(0, 0, -1 * (cannonRangeDefaultRot.y + 180));
+                        for (int i = 0; i < cannonsL.Length; i++)
+                        {
+                            cannonsL[i].transform.localRotation = Quaternion.Euler(0, cannonRangeDefaultRot.y + 90, 0);
+                        }
                     }
                 }
                 else
                 {
-                    cannonRangeDefaultRot.y = Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonCentreR2.x, aimPos.y - cannonCentreR2.y) * Mathf.Rad2Deg, 45f, 135f) + 90;
-                    cannonRangeBoneR.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
-                    cannonRangeBoneR2.localRotation = Quaternion.Euler(0, 0, -1 * (cannonRangeDefaultRot.y + 180));
-                    for (int i = 0; i < cannonsR.Length; i++)
+                    cannonRangeL.enabled = false;
+                    if (shipClass == Classes.Brigantine)
                     {
-                        cannonsR[i].transform.localRotation = Quaternion.Euler(0, cannonRangeDefaultRot.y - 90, 0);
+                        cannonRangeL2.enabled = false;
+                    }
+                    for (int i = 0; i < cannonsL.Length; i++)
+                    {
+                        cannonsL[i].transform.localRotation = Quaternion.Euler(0, 270, 0);
                     }
                 }
-            }
-            else
-            {
-                cannonRangeR.enabled = false;
-                if (shipClass == Classes.Brigantine)
+
+                //Right second
+                if (goodAimR)
                 {
-                    cannonRangeR2.enabled = false;
+                    cannonRangeR.enabled = true;
+                    if (shipClass == Classes.Brigantine)
+                    {
+                        cannonRangeR2.enabled = true;
+                        for (int i = 0; i < cannonsR.Length; i++)
+                        {
+                            cannonsR[i].transform.localRotation = Quaternion.Euler(0,
+                                Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonsR[i].transform.localPosition.x, aimPos.y - cannonsR[i].transform.localPosition.z) * Mathf.Rad2Deg, 45f, 135f),
+                                0);
+                        }
+                    }
+                    else
+                    {
+                        cannonRangeDefaultRot.y = Mathf.Clamp(Mathf.Atan2(aimPos.x - cannonCentreR2.x, aimPos.y - cannonCentreR2.y) * Mathf.Rad2Deg, 45f, 135f) + 90;
+                        cannonRangeBoneR.localRotation = Quaternion.Euler(cannonRangeDefaultRot);
+                        cannonRangeBoneR2.localRotation = Quaternion.Euler(0, 0, -1 * (cannonRangeDefaultRot.y + 180));
+                        for (int i = 0; i < cannonsR.Length; i++)
+                        {
+                            cannonsR[i].transform.localRotation = Quaternion.Euler(0, cannonRangeDefaultRot.y - 90, 0);
+                        }
+                    }
                 }
-                for (int i = 0; i < cannonsR.Length; i++)
+                else
                 {
-                    cannonsR[i].transform.localRotation = Quaternion.Euler(0, 90, 0);
+                    cannonRangeR.enabled = false;
+                    if (shipClass == Classes.Brigantine)
+                    {
+                        cannonRangeR2.enabled = false;
+                    }
+                    for (int i = 0; i < cannonsR.Length; i++)
+                    {
+                        cannonsR[i].transform.localRotation = Quaternion.Euler(0, 90, 0);
+                    }
                 }
             }
         }
 
         //sort out cannon range colours
-        //cannonRangeL and L2
-        if (shipClass != Classes.Cutter)
+        if (shipClass == Classes.Galleon && specialRunning)
         {
-            if (reloadL >= maxReload)
+            cannonRangeL.material = cannonRangeMat;
+            cannonRangeR.material = cannonRangeMat;
+        }
+        else
+        {
+            //cannonRangeL and L2
+            if (shipClass != Classes.Cutter)
             {
-                cannonRangeL.material = cannonRangeMat;
+                if (reloadL >= maxReload)
+                {
+                    cannonRangeL.material = cannonRangeMat;
+                    if (shipClass == Classes.Brigantine)
+                    {
+                        cannonRangeL2.material = cannonRangeMat;
+                    }
+                }
+                else
+                {
+                    cannonRangeL.material = cannonRangeMatEmpty;
+                    if (shipClass == Classes.Brigantine)
+                    {
+                        cannonRangeL2.material = cannonRangeMatEmpty;
+                    }
+                }
+            }
+            //cannonRangeR and R2
+            if (reloadR >= maxReload)
+            {
+                cannonRangeR.material = cannonRangeMat;
                 if (shipClass == Classes.Brigantine)
                 {
-                    cannonRangeL2.material = cannonRangeMat;
+                    cannonRangeR2.material = cannonRangeMat;
                 }
             }
             else
             {
-                cannonRangeL.material = cannonRangeMatEmpty;
+                cannonRangeR.material = cannonRangeMatEmpty;
                 if (shipClass == Classes.Brigantine)
                 {
-                    cannonRangeL2.material = cannonRangeMatEmpty;
+                    cannonRangeR2.material = cannonRangeMatEmpty;
                 }
-            }
-        }
-        //cannonRangeR and R2
-        if (reloadR >= maxReload)
-        {
-            cannonRangeR.material = cannonRangeMat;
-            if (shipClass == Classes.Brigantine)
-            {
-                cannonRangeR2.material = cannonRangeMat;
-            }
-        }
-        else
-        {
-            cannonRangeR.material = cannonRangeMatEmpty;
-            if (shipClass == Classes.Brigantine)
-            {
-                cannonRangeR2.material = cannonRangeMatEmpty;
             }
         }
 
@@ -752,16 +794,8 @@ public class boatCombat : MonoBehaviour
         {
             if (goodAimL && (reloadL >= maxReload))
             {
-                if(isPlayer || (team == rMan.playerTeam && team != 0))
-                {
-                    StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, true, selectedAmmo));
-                    volleying++;
-                }
-                else
-                {
-                    StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, false, selectedAmmo));
-                    volleying++;
-                }
+                StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, selectedAmmo, 1));
+                volleying++;
 
                 if (selectedAmmo != 0)
                 {
@@ -777,16 +811,8 @@ public class boatCombat : MonoBehaviour
             }
             else if (goodAimR && (reloadR >= maxReload))
             {
-                if(isPlayer || (team == rMan.playerTeam && team != 0))
-                {
-                    StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, true, selectedAmmo));
-                    volleying++;
-                }
-                else
-                {
-                    StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, false, selectedAmmo));
-                    volleying++;
-                }
+                StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, selectedAmmo, 1));
+                volleying++;
 
                 if (selectedAmmo != 0)
                 {
@@ -823,6 +849,7 @@ public class boatCombat : MonoBehaviour
                     break;
                 case Classes.Galleon:
                     specialRunning = true;
+                    specialCo = StartCoroutine(BarrageSpecial());
                     break;
             }
             reloadSpecial = 0;
@@ -842,8 +869,35 @@ public class boatCombat : MonoBehaviour
         bm.charge = false;
         specialRunning = false;
     }
+    IEnumerator BarrageSpecial()
+    {
+        barrageOutline.enabled = true;
+        for (int i=0;i<cannonsL.Length;i++)
+        {
+            cannonsL[i].transform.localRotation = Quaternion.Euler(0, 270, 0);
+            cannonsR[i].transform.localRotation = Quaternion.Euler(0, 90, 0);
+        }
 
-    IEnumerator VolleyFire(int[] volleyOrder, GameObject[] broadside, bool isPlayer1, int selectedAmmo1)
+        yield return new WaitForSeconds(1.75f);
+        for (int i=0;i<4;i++)
+        {
+            for (int j = 0; j < cannonsL.Length; j++)
+            {
+                cannonsL[j].transform.localRotation = Quaternion.Euler(0, 270 + Random.Range(-30f, 30f), 0);
+                cannonsR[j].transform.localRotation = Quaternion.Euler(0, 90 + Random.Range(-30f, 30f), 0);
+            }
+            volleying = 2;
+            StartCoroutine(VolleyFire(volleyFireOrderL, cannonsL, 0, 1));
+            StartCoroutine(VolleyFire(volleyFireOrderR, cannonsR, 0, 1));
+            yield return new WaitUntil(() => volleying == 0);
+        }
+        barrageOutline.enabled = false;
+        reloadL = 0;
+        reloadR = 0;
+        specialRunning = false;
+    }
+
+    IEnumerator VolleyFire(int[] volleyOrder, GameObject[] broadside, int selectedAmmo1, float durationMult)
     {
         //shuffle volleyFireOrder
         int temp;
@@ -859,7 +913,14 @@ public class boatCombat : MonoBehaviour
         //fire broadside in order of volleyFireOrder
         for (int i = 0; i < volleyOrder.Length; i++)
         {
-            broadside[volleyOrder[i]].GetComponent<cannonShoot>().Shoot(40, 0.75f, isPlayer1, selectedAmmo1, hullCollider, gameID);
+            if (isPlayer || (team == rMan.playerTeam && team != 0))
+            {
+                broadside[volleyOrder[i]].GetComponent<cannonShoot>().Shoot(40, 0.75f * durationMult, true, selectedAmmo1, hullCollider, gameID);
+            }
+            else
+            {
+                broadside[volleyOrder[i]].GetComponent<cannonShoot>().Shoot(40, 0.75f * durationMult, false, selectedAmmo1, hullCollider, gameID);
+            }
             yield return new WaitForSeconds(volleyFireRate);
         }
         volleying--;
