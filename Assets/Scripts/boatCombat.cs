@@ -103,7 +103,7 @@ public class boatCombat : MonoBehaviour
     //special stuff
     public GameObject mine, mortar;
     GameObject instance;
-    bool specialRunning;
+    public bool specialRunning;
     Coroutine specialCo;
     Renderer bomo; //barrage-or-mortar outline
     public bool aimingMortar;

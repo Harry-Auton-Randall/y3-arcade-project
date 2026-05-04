@@ -24,19 +24,19 @@ public class boatRamTip : MonoBehaviour
             if (collision.gameObject.layer == LayerMask.NameToLayer("boat"))
             {
                 //figure out how much damage to do based on z-axis speed
-                Debug.Log("current speed: " + speed);
-                Debug.Log("speed last phys update: " + speedPrior);
-                Debug.Log("speed stat: " + bc.speed);
+                //Debug.Log("current speed: " + speed);
+                //Debug.Log("speed last phys update: " + speedPrior);
+                //Debug.Log("speed stat: " + bc.speed);
                 if (speedPrior >= bc.speed)
                 {
                     collision.transform.parent.GetComponent<boatCombat>().TakeDamage(damage, false, false, bc.gameID);
-                    Debug.Log(damage);
+                    //Debug.Log(damage);
                 }
                 else if (speedPrior > 0)
                 {
                     int damageOut = (int)(damage * (speedPrior / bc.speed));
                     collision.transform.parent.GetComponent<boatCombat>().TakeDamage(damageOut, false, false, bc.gameID);
-                    Debug.Log(damageOut);
+                    //Debug.Log(damageOut);
                 }
 
                 bc.EndCharge();

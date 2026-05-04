@@ -2745,7 +2745,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 223ed58bc953bf944b8d87927a191dc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoundManager
-  playerStartingClass: 0
+  playerStartingClass: 2
   player: 0
   cutterP: {fileID: 2634757693801544768, guid: 2dea82cf029a37f499014c5e94bacb77, type: 3}
   brigantineP: {fileID: 8866524959041813145, guid: a83465fa0158d2542a2b55cdd1c5c688, type: 3}
@@ -2758,8 +2758,8 @@ MonoBehaviour:
   respawnTime: 10
   lives: 0
   maxLives: 1
-  totalShips: 99
-  allowedShips: 00000000010000000200000003000000
+  totalShips: 1
+  allowedShips: 00000000000000000000000000000000
   teams: 0
   playerTeam: 0
   spawnImmunityTime: 5

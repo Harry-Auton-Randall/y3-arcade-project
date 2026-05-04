@@ -8,8 +8,8 @@ public class boatMove : MonoBehaviour
     public Rigidbody rb;
     float speed;
     float rotate;
-    float movementIn;
-    float rotationIn;
+    float movementIn = 0;
+    float rotationIn = 0;
 
     //For getting pushed by pushing zones
     Vector3 globalForce, totalPushForce;
@@ -21,8 +21,11 @@ public class boatMove : MonoBehaviour
     public float chargeSpeedMult = 1f;
 
     //outputs
-    public float outSpd, outGlbSpd, outRotSpd;
-    public Vector3 globalMoveDir, localMoveDir;
+    public float outSpd = 0;
+    public float outGlbSpd = 0; 
+    public float outRotSpd = 0;
+    public Vector3 globalMoveDir = Vector3.zero;
+    public Vector3 localMoveDir = Vector3.zero;
 
     void Awake()
     {

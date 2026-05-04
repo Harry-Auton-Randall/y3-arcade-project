@@ -38,6 +38,10 @@ public class boatControlAI : MonoBehaviour
     float targetWaypointAngleCircleAdj;
     float targetWaypointAimCircleRadius;
 
+    //for leading rams
+    Vector3 targetWaypointLead, targetWaypointLeadLocal, targetWaypointVelLocal;
+    float zSpeedRatio;
+
     int shootablePoi;
     Vector3 shootableWaypoint, shootableWaypointVel;
     bool shootablePoiGoodAngle, shootablePoiGoodAngleSoFar;
@@ -46,6 +50,7 @@ public class boatControlAI : MonoBehaviour
     //special stuff
     Vector3 targetToThisLocal;
     float targetToThisAngle;
+    bool canRam = false;
 
     int cannonballSpeed = 40;
     bool anythingToShoot;
@@ -211,6 +216,7 @@ public class boatControlAI : MonoBehaviour
                 if ((bc.team != poiBC.team) || (bc.team == 0))
                 {
                     poiInfos[colliderToPoi].Set(PoiInfo.Types.EnemyBoat, poiBoat.transform.position, this.transform);
+                    //Debug.Log(poiInfos[colliderToPoi].localPos);
 
                     poiObjects[colliderToPoi] = poiBoat;
 
@@ -626,6 +632,17 @@ public class boatControlAI : MonoBehaviour
         targetWaypointLocal.y = 0;
         targetWaypointAngle = Vector3.SignedAngle(Vector3.forward, targetWaypointLocal, Vector3.up);
 
+        if (!pathfinding && canReachTarget && bc.shipClass == boatCombat.Classes.Brigantine && (bc.specialCharged || bc.specialRunning) &&
+               (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat))
+        {
+            canRam = true;
+        }
+        else
+        {
+            canRam = false;
+        }
+
         //To prevent errors if the target is unreachable
         if (canReachTarget)
         {
@@ -644,9 +661,11 @@ public class boatControlAI : MonoBehaviour
 
             //sets aimingAtTargetPOI, depending on targetPOI type + distance, + this ship class
             //aimingAtTargetPOI means the ship is positioning itself to fire upon its targetPOI
-            if (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+            //Disabled when a brigantine is readying or using its special
+            if (!canRam && 
+               (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
                 poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
-                poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort)
+                poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort))
             {
                 //Most ships aim their guns if within 30m, cutters get in further, then turn around
 
@@ -674,20 +693,54 @@ public class boatControlAI : MonoBehaviour
 
             //Sorts out movement and steering - acts differently depending on aimingAtTargetPOI
 
-            if (!aimingAtTargetPoi || pathfinding)
+            if (canRam && bc.specialRunning)
+            {
+                //Specifically for when a brigantine is currently ramming
+                //leads its "shot"
+
+                //gets the
+                targetWaypointVelLocal = transform.InverseTransformDirection(poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity);
+                if (targetWaypointVelLocal.z > 0) { targetWaypointVelLocal.z = 0; }
+                zSpeedRatio = (bc.bm.outSpd - targetWaypointVelLocal.z) / bc.bm.outSpd;
+
+
+                targetWaypointLead = targetWaypoint +
+                    (poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity * zSpeedRatio *
+                    (poiInfos[targetPoi].localPos.magnitude / (bc.speed * bc.bm.chargeSpeedMult)));
+
+                targetWaypointLeadLocal = transform.InverseTransformPoint(targetWaypointLead);
+                targetWaypointLeadLocal.y = 0;
+                targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward, targetWaypointLeadLocal, Vector3.up);
+
+
+                steerIn = RotateBoat(targetWaypointAngleAiming);
+                if (Mathf.Abs(targetWaypointAngleAiming) > 45)
+                {
+                    moveIn = 0;
+                }
+                else
+                {
+                    moveIn = 1;
+                }
+
+                Debug.DrawLine(targetWaypointLead, targetWaypointLead + (Vector3.up * 9999), Color.green, 0);
+            }
+            else if (!aimingAtTargetPoi || pathfinding)
             {
                 //NOT aimingAtTargetPOI - paths directly towards its target waypoint
                 //Also happens when pathfinding
 
                 //point towards target waypoint
                 //Doesnt bother if stopAtTarget is enabled AND the target is close enough
-                if (!(stopAtTarget && poiInfos[targetPoi].dist < 5))
+                if (!(stopAtTarget && poiInfos[targetPoi].dist < 20))
                 {
                     //when targeting enemy ships, offset their rotation a little bit, to enter a better orbit around their target
-                    //only does so when not pathfinding
-                    if (!pathfinding && ((poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                    //only does so when not pathfinding or ramming
+
+                    if (!pathfinding && !canRam &&
+                        (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
                          poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat) &&
-                         poiInfos[targetPoi].dist > targetWaypointAimCircleRadius && poiInfos[targetPoi].dist <= 100))
+                         poiInfos[targetPoi].dist > targetWaypointAimCircleRadius && poiInfos[targetPoi].dist <= 100)
                     {
                         if (targetWaypointAngle < 0)
                         {
@@ -843,10 +896,18 @@ public class boatControlAI : MonoBehaviour
                 break;
 
             case boatCombat.Classes.Brigantine:
+
+                if (poiInfos[targetPoi].dist <= 50 && Mathf.Abs(targetWaypointAngle) <= 10 && canRam)
+                {
+                    bc.UseSpecial();
+                }
                 break;
             case boatCombat.Classes.Frigate:
+
+
                 break;
             case boatCombat.Classes.Galleon:
+
                 if (goodAnglePois >= 2)
                 {
                     bc.UseSpecial();
