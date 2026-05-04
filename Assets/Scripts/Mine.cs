@@ -13,6 +13,8 @@ public class Mine : MonoBehaviour
     Rigidbody rb;
     public bool detonating = false;
 
+    int damage = 16;
+
     Collider[] startDam = new Collider[1];
     int startDamCount = 0;
     LayerMask startDamMask;
@@ -115,61 +117,67 @@ public class Mine : MonoBehaviour
     }
     public void DetonateShot(int idIn, bool delay)
     {
-        shot = true;
-        spawnerID = idIn;
-        if (delay)
+        if (!detonating)
         {
-            DetonateDelay();
-        }
-        else
-        {
-            Detonate();
+            shot = true;
+            spawnerID = idIn;
+            if (delay)
+            {
+                DetonateDelay();
+            }
+            else
+            {
+                Detonate();
+            }
         }
     }
 
     public void Detonate()
     {
-        detonating = true;
-
-        nearbyDamagers = new Collider[GameObject.Find("/RoundManager").GetComponent<RoundManager>().totalShips + 10]; //+10 temporary
-
-        nearbyDamagerCount = Physics.OverlapSphereNonAlloc(this.transform.position, radius, nearbyDamagers, damagerMask);
-        
-        for (int i = 0; i < nearbyDamagerCount; i++)
+        if (!detonating)
         {
-            if (nearbyDamagers[i].transform.parent.gameObject != this.gameObject)
-            { 
-                //This doesn't work for some reason, so the if-else is used instead
-                //switch(nearbyDamagers[i].transform.parent.gameObject.layer)
-                //{
-                //    case (LayerMask.NameToLayer("boat")):
-                //        nearbyDamagers[i].transform.parent.GetComponent<boatCombat>().TakeDamage(16, false, false, -1);
-                //        break;
-                //    case (LayerMask.NameToLayer("mine")):
-                //        nearbyDamagers[i].transform.parent.GetComponent<Mine>().Detonate();
-                //        break;
-                //}
+            detonating = true;
 
-                if (nearbyDamagers[i].transform.parent.gameObject.layer == LayerMask.NameToLayer("boat"))
+            nearbyDamagers = new Collider[GameObject.Find("/RoundManager").GetComponent<RoundManager>().totalShips + 10]; //+10 temporary
+
+            nearbyDamagerCount = Physics.OverlapSphereNonAlloc(this.transform.position, radius, nearbyDamagers, damagerMask);
+
+            for (int i = 0; i < nearbyDamagerCount; i++)
+            {
+                if (nearbyDamagers[i].transform.parent.gameObject != this.gameObject)
                 {
-                    nearbyDamagers[i].transform.parent.GetComponent<boatCombat>().TakeDamage(14, false, false, spawnerID);
-                }
-                else if (nearbyDamagers[i].transform.parent.gameObject.layer == LayerMask.NameToLayer("mine"))
-                {
-                    if (!(nearbyDamagers[i].transform.parent.GetComponent<Mine>().detonating))
+                    //This doesn't work for some reason, so the if-else is used instead
+                    //switch(nearbyDamagers[i].transform.parent.gameObject.layer)
+                    //{
+                    //    case (LayerMask.NameToLayer("boat")):
+                    //        nearbyDamagers[i].transform.parent.GetComponent<boatCombat>().TakeDamage(16, false, false, -1);
+                    //        break;
+                    //    case (LayerMask.NameToLayer("mine")):
+                    //        nearbyDamagers[i].transform.parent.GetComponent<Mine>().Detonate();
+                    //        break;
+                    //}
+
+                    if (nearbyDamagers[i].transform.parent.gameObject.layer == LayerMask.NameToLayer("boat"))
                     {
-                        if (shot)
+                        nearbyDamagers[i].transform.parent.GetComponent<boatCombat>().TakeDamage(damage, false, false, spawnerID);
+                    }
+                    else if (nearbyDamagers[i].transform.parent.gameObject.layer == LayerMask.NameToLayer("mine"))
+                    {
+                        if (!(nearbyDamagers[i].transform.parent.GetComponent<Mine>().detonating))
                         {
-                            nearbyDamagers[i].transform.parent.GetComponent<Mine>().DetonateShot(spawnerID, false);
-                        }
-                        else
-                        {
-                            nearbyDamagers[i].transform.parent.GetComponent<Mine>().Detonate();
+                            if (shot)
+                            {
+                                nearbyDamagers[i].transform.parent.GetComponent<Mine>().DetonateShot(spawnerID, false);
+                            }
+                            else
+                            {
+                                nearbyDamagers[i].transform.parent.GetComponent<Mine>().Detonate();
+                            }
                         }
                     }
                 }
             }
+            Destroy(this.gameObject);
         }
-        Destroy(this.gameObject);
     }
 }

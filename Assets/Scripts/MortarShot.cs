@@ -21,9 +21,10 @@ public class MortarShot : MonoBehaviour
         rend = transform.Find("dangerCircle16").GetComponent<Renderer>();
         damagerMask = (1 << LayerMask.NameToLayer("boat"));
     }
-    public void Init(int idIn, bool friendly)
+    public void Init(int idIn, bool friendly, float delayIn)
     {
         spawnerID = idIn;
+        time = delayIn * -1;
 
         this.materials = rend.materials;
         materials[0] = Resources.Load("SolidMaterials/red40", typeof(Material)) as Material;

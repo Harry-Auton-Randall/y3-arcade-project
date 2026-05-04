@@ -16,7 +16,7 @@ public class boatControlAI : MonoBehaviour
     GameObject[] objectiveWaypoints;
     Collider[] nearbyPois;
     PoiInfo[] poiInfos;
-    float poiRadius = 150f;
+    float poiRadius = 100f;
 
     int nearbyPoiCount;
     int colliderToPoi;
@@ -51,6 +51,14 @@ public class boatControlAI : MonoBehaviour
     Vector3 targetToThisLocal;
     float targetToThisAngle;
     bool canRam = false;
+    //bool aimingMortar;
+    
+    float mortarAimDelay = 2.25f;
+    float timeMortarAiming = 0;
+    bool aimingMortarStart = true, mortarAimingAtShootable;
+    Vector3 mortarWaypoint, mortarWaypointVel, mortarWaypointLocal;
+
+    //
 
     int cannonballSpeed = 40;
     bool anythingToShoot;
@@ -266,6 +274,8 @@ public class boatControlAI : MonoBehaviour
             if (poiInfos[i].priority > highestPriorityPoi) { highestPriorityPoi = poiInfos[i].priority; }
         }
 
+        targetPoi = -1;
+        shootablePoi = -1;
         closestPoi = Mathf.Infinity;
         closestShootablePoi = Mathf.Infinity;
         anythingToShoot = false;
@@ -852,6 +862,13 @@ public class boatControlAI : MonoBehaviour
             AimCannonsAtShootable();
         }
 
+        //Can't move if aiming mortar
+        if (bc.aimingMortar)
+        {
+            moveIn = 0;
+            steerIn = 0;
+        }
+
         bm.SetMovementIn(moveIn);
         bm.SetRotationIn(steerIn);
 
@@ -864,7 +881,7 @@ public class boatControlAI : MonoBehaviour
         {
             case boatCombat.Classes.Cutter:
 
-                if (poiInfos[targetPoi].dist <= 25 && poiInfos[targetPoi].dist >= 10 && 
+                if (poiInfos[targetPoi].dist <= 25 && poiInfos[targetPoi].dist >= 8 && 
                     (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
                     poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat))
                 {
@@ -873,7 +890,7 @@ public class boatControlAI : MonoBehaviour
                     targetToThisAngle = Mathf.Abs(Vector3.SignedAngle(Vector3.forward, targetToThisLocal, Vector3.up));
                     //bc.UseSpecial();
                 }
-                else if (anythingToShoot && poiInfos[shootablePoi].dist <= 25 && poiInfos[targetPoi].dist >= 10 &&
+                else if (anythingToShoot && poiInfos[shootablePoi].dist <= 25 && poiInfos[targetPoi].dist >= 8 &&
                     (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
                     poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat))
                 {
@@ -888,11 +905,10 @@ public class boatControlAI : MonoBehaviour
                     targetToThisAngle = 9999;
                 }
 
-                if (targetToThisAngle <= 5)
+                if (targetToThisAngle <= 10)
                 {
                     bc.UseSpecial();
                 }
-
                 break;
 
             case boatCombat.Classes.Brigantine:
@@ -902,10 +918,28 @@ public class boatControlAI : MonoBehaviour
                     bc.UseSpecial();
                 }
                 break;
+
             case boatCombat.Classes.Frigate:
 
+                if (poiInfos[targetPoi].dist >= 40 && poiInfos[targetPoi].dist <= poiRadius && bc.specialCharged && 
+                    (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                    poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
+                    poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort))
+                {
+                    bc.aimingMortar = true;
+                    mortarAimingAtShootable = false;
+                }
+                else if (anythingToShoot && poiInfos[shootablePoi].dist >= 40 && poiInfos[shootablePoi].dist <= poiRadius && bc.specialCharged &&
+                    (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                    poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat ||
+                    poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyFort))
+                {
+                    bc.aimingMortar = true;
+                    mortarAimingAtShootable = true;
+                }
 
                 break;
+
             case boatCombat.Classes.Galleon:
 
                 if (goodAnglePois >= 2)
@@ -914,86 +948,143 @@ public class boatControlAI : MonoBehaviour
                 }
                 break;
         }
-        // If not already aiming, Gets the global position and velocity of its target
-        if (!isAiming)
-        {
-            if (anythingToShoot)
-            {
-                shootableWaypoint = poiInfos[shootablePoi].globalPos;
 
-                if (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
-                    poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat)
+        if (bc.aimingMortar)
+        {
+            isAiming = false;
+            timeAiming = 0;
+            reticle.transform.localPosition = Vector3.zero;
+            bc.aimPos = Vector2.zero;
+
+            if (aimingMortarStart)
+            {
+                if (!mortarAimingAtShootable)
                 {
-                    shootableWaypointVel = poiObjects[shootablePoi].GetComponent<boatMove>().globalMoveDir;
+                    mortarWaypoint = poiInfos[targetPoi].globalPos;
+                    mortarWaypointVel = poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity;
                 }
                 else
                 {
+                    mortarWaypoint = poiInfos[shootablePoi].globalPos;
+                    mortarWaypointVel = poiObjects[shootablePoi].GetComponent<Rigidbody>().linearVelocity;
+                }
+                mortarWaypoint += mortarWaypointVel * (mortarAimDelay + bc.mortarDelay);
+            }
+
+            mortarWaypointLocal = transform.InverseTransformPoint(mortarWaypoint);
+
+            timeMortarAiming += Time.deltaTime;
+            if (timeMortarAiming > mortarAimDelay)
+            {
+                timeMortarAiming = mortarAimDelay;
+            }
+            bc.mortarAimPos.x = mortarWaypointLocal.x * MortarMathEquation(timeMortarAiming / mortarAimDelay);
+            bc.mortarAimPos.y = mortarWaypointLocal.z * MortarMathEquation(timeMortarAiming / mortarAimDelay);
+            bc.MoveMortarOutline();
+
+            if (timeMortarAiming >= mortarAimDelay)
+            {
+                bc.UseSpecial();
+                bc.aimingMortar = false;
+                bc.MoveMortarOutline();
+            }
+
+            aimingMortarStart = false;
+        }
+        else
+        {
+            aimingMortarStart = true;
+            timeMortarAiming = 0;
+            bc.mortarAimPos = Vector2.zero;
+            mortarWaypoint = transform.position;
+            mortarWaypointVel = Vector3.zero;
+
+            // If not already aiming, Gets the global position and velocity of its target
+            if (!isAiming)
+            {
+                if (anythingToShoot)
+                {
+                    shootableWaypoint = poiInfos[shootablePoi].globalPos;
+
+                    if (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                        poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat)
+                    {
+                        shootableWaypointVel = poiObjects[shootablePoi].GetComponent<Rigidbody>().linearVelocity;
+                    }
+                    else
+                    {
+                        shootableWaypointVel = Vector3.zero;
+                    }
+                }
+                else
+                {
+                    shootableWaypoint = transform.position;
                     shootableWaypointVel = Vector3.zero;
                 }
+
+                reticle.transform.position = shootableWaypoint;
+            }
+
+            //If it is aiming, use previously found target position/velocity, and timeAiming, to estimate its current position
+            else
+            {
+                reticle.transform.position = shootableWaypoint + (shootableWaypointVel * timeAiming);
+            }
+
+            //Gets the position it's currently aiming at, finds its distance, and uses it to lead its shot
+            reticle.transform.position += shootableWaypointVel * (reticle.transform.localPosition.magnitude / cannonballSpeed);
+
+            //Finds the distance between the reticle and the relevant cannons, to check if its in range
+            //if (reticle.transform.localPosition.x >= 0 || bc.shipClass == boatCombat.Classes.Cutter)
+            //{
+            //    shootableCannonCentreDist = Vector3.Distance(cannonCentreR, reticle.transform.localPosition);
+            //}
+            //else
+            //{
+            //    shootableCannonCentreDist = Vector3.Distance(cannonCentreL, reticle.transform.localPosition);
+            //}
+            shootableCannonCentreDist = FindCannonCentreDist(reticle.transform.localPosition);
+
+            if (shootableCannonCentreDist > 30.5f)
+            {
+                reticle.transform.localPosition = Vector3.zero;
+            }
+
+            //updates aimPos in boatCombat
+            bc.aimPos.x = reticle.transform.localPosition.x;
+            bc.aimPos.y = reticle.transform.localPosition.z;
+
+            //if aiming is valid, set isAiming to true. Also stays true, as long as volleying is > 0
+            if ((shootableCannonCentreDist <= 30.5f && bc.reloadProgress == 100) || (bc.volleying > 0 && isAiming))
+            {
+                if (timeAiming >= shootDelay)
+                {
+                    bc.Shoot();
+                }
+
+                timeAiming += Time.deltaTime;
+                isAiming = true;
             }
             else
             {
-                shootableWaypoint = transform.position;
-                shootableWaypointVel = Vector3.zero;
+                //when aiming stops being valid, if volleying == 0, fire off one last shot
+                //if (bc.volleying == 0 && isAiming)
+                //{
+                //    bc.Shoot();
+                //}
+
+                timeAiming = 0;
+                isAiming = false;
             }
 
-            reticle.transform.position = shootableWaypoint;
+            //reticleCircle.value = bc.reloadProgress;
+            //reticle.transform.rotation = bc.rMan.playerReticleRotation;
         }
+    }
 
-        //If it is aiming, use previously found target position/velocity, and timeAiming, to estimate its current position
-        else
-        {
-            reticle.transform.position = shootableWaypoint + (shootableWaypointVel * timeAiming);
-        }
-
-        //Gets the position it's currently aiming at, finds its distance, and uses it to lead its shot
-        reticle.transform.position += shootableWaypointVel * (reticle.transform.localPosition.magnitude / cannonballSpeed);
-
-        //Finds the distance between the reticle and the relevant cannons, to check if its in range
-        //if (reticle.transform.localPosition.x >= 0 || bc.shipClass == boatCombat.Classes.Cutter)
-        //{
-        //    shootableCannonCentreDist = Vector3.Distance(cannonCentreR, reticle.transform.localPosition);
-        //}
-        //else
-        //{
-        //    shootableCannonCentreDist = Vector3.Distance(cannonCentreL, reticle.transform.localPosition);
-        //}
-        shootableCannonCentreDist = FindCannonCentreDist(reticle.transform.localPosition);
-
-        if(shootableCannonCentreDist > 30.5f)
-        {
-            reticle.transform.localPosition = Vector3.zero;
-        }
-
-        //updates aimPos in boatCombat
-        bc.aimPos.x = reticle.transform.localPosition.x;
-        bc.aimPos.y = reticle.transform.localPosition.z;
-
-        //if aiming is valid, set isAiming to true. Also stays true, as long as volleying is > 0
-        if ((shootableCannonCentreDist <= 30.5f && bc.reloadProgress == 100) || (bc.volleying > 0 && isAiming))
-        {
-            if (timeAiming >= shootDelay)
-            {
-                bc.Shoot();
-            }
-
-            timeAiming += Time.deltaTime;
-            isAiming = true;
-        }
-        else
-        {
-            //when aiming stops being valid, if volleying == 0, fire off one last shot
-            //if (bc.volleying == 0 && isAiming)
-            //{
-            //    bc.Shoot();
-            //}
-
-            timeAiming = 0;
-            isAiming = false;
-        }
-
-        //reticleCircle.value = bc.reloadProgress;
-        //reticle.transform.rotation = bc.rMan.playerReticleRotation;
+    float MortarMathEquation(float x)
+    {
+        return (-1 * Mathf.Pow(-x + 1, 2.5f)) + 1;
     }
 
     public void RotateReticle(Quaternion input)

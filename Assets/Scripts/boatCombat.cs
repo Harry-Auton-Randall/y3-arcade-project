@@ -108,6 +108,7 @@ public class boatCombat : MonoBehaviour
     Renderer bomo; //barrage-or-mortar outline
     public bool aimingMortar;
     public Vector2 mortarAimPos;
+    public float mortarDelay;
     public bool specialCharged;
 
     void Awake()
@@ -171,7 +172,7 @@ public class boatCombat : MonoBehaviour
                 break;
 
             case Classes.Frigate:
-                speed = 6.5f;
+                speed = 7f;
                 rotate = 50f;
                 maxHealth = 20;
                 maxReload = 5f;
@@ -205,10 +206,12 @@ public class boatCombat : MonoBehaviour
                 shipLength = 6.5f;
                 shipWidth = 2.5f;
 
+                mortarDelay = 1.25f;
+
                 break;
 
             case Classes.Galleon:
-                speed = 5f;
+                speed = 6f;
                 rotate = 35f;
                 maxHealth = 30;
                 maxReload = 6f;
@@ -948,11 +951,11 @@ public class boatCombat : MonoBehaviour
                     instance.transform.position = new Vector3(bomo.transform.position.x, 0, bomo.transform.position.z);
                     if (isPlayer || (team == rMan.playerTeam && team != 0))
                     {
-                        instance.GetComponent<MortarShot>().Init(gameID, true);
+                        instance.GetComponent<MortarShot>().Init(gameID, true, mortarDelay);
                     }
                     else
                     {
-                        instance.GetComponent<MortarShot>().Init(gameID, false);
+                        instance.GetComponent<MortarShot>().Init(gameID, false, mortarDelay);
                     }
                     break;
                 case Classes.Galleon:
@@ -989,7 +992,7 @@ public class boatCombat : MonoBehaviour
 
         yield return new WaitForSeconds(1.75f);
         bomo.material = cannonRangeMatEmpty;
-        for (int i=0;i<4;i++)
+        for (int i=0;i<5;i++)
         {
             for (int j = 0; j < cannonsL.Length; j++)
             {
