@@ -40,6 +40,12 @@ public class boatControlAI : MonoBehaviour
 
     int shootablePoi;
     Vector3 shootableWaypoint, shootableWaypointVel;
+    bool shootablePoiGoodAngle, shootablePoiGoodAngleSoFar;
+    int goodAnglePois;
+
+    //special stuff
+    Vector3 targetToThisLocal;
+    float targetToThisAngle;
 
     int cannonballSpeed = 40;
     bool anythingToShoot;
@@ -204,7 +210,7 @@ public class boatControlAI : MonoBehaviour
                 //Currently only supports enemyShip POIs
                 if ((bc.team != poiBC.team) || (bc.team == 0))
                 {
-                    poiInfos[colliderToPoi].Set(PoiInfo.Types.EnemyBoat, poiBoat.transform.position, this.transform.position);
+                    poiInfos[colliderToPoi].Set(PoiInfo.Types.EnemyBoat, poiBoat.transform.position, this.transform);
 
                     poiObjects[colliderToPoi] = poiBoat;
 
@@ -215,7 +221,7 @@ public class boatControlAI : MonoBehaviour
         //adds objective POIs to poiInfos
         for (int i = 0; i < objectiveWaypoints.Length; i++)
         {
-            poiInfos[colliderToPoi].Set(PoiInfo.Types.ObjectivePoint, objectiveWaypoints[i].transform.position, this.transform.position);
+            poiInfos[colliderToPoi].Set(PoiInfo.Types.ObjectivePoint, objectiveWaypoints[i].transform.position, this.transform);
             poiObjects[colliderToPoi] = objectiveWaypoints[i];
             if (bc.rMan.mode == 0)
             {
@@ -257,6 +263,8 @@ public class boatControlAI : MonoBehaviour
         closestPoi = Mathf.Infinity;
         closestShootablePoi = Mathf.Infinity;
         anythingToShoot = false;
+        shootablePoiGoodAngleSoFar = false;
+        goodAnglePois = 0;
         for (int i = 0; i < colliderToPoi; i++)
         {
             if ((poiInfos[i].dist < closestPoi) && (poiInfos[i].priority == highestPriorityPoi))
@@ -265,14 +273,44 @@ public class boatControlAI : MonoBehaviour
                 closestPoi = poiInfos[i].dist;
             }
             //shootable POI
-            if (poiInfos[i].dist < closestShootablePoi &&
-                (poiInfos[i].poiType == PoiInfo.Types.ObjectiveBoat ||
+            if (poiInfos[i].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
                  poiInfos[i].poiType == PoiInfo.Types.EnemyBoat ||
-                 poiInfos[i].poiType == PoiInfo.Types.EnemyFort))
+                 poiInfos[i].poiType == PoiInfo.Types.EnemyFort)
             {
-                anythingToShoot = true;
-                shootablePoi = i;
-                closestShootablePoi = poiInfos[i].dist;
+                //Check if within cannon's range
+                if (bc.CheckCannonAngle(poiInfos[i].localPos.x, poiInfos[i].localPos.z) && FindCannonCentreDist(poiInfos[i].localPos) <= 30.5f)
+                {
+                    shootablePoiGoodAngle = true;
+                    goodAnglePois++;
+                }
+                else
+                {
+                    shootablePoiGoodAngle = false;
+                }
+
+                //initially, shootable POIs are selected if they're the closest so far OR they're within the cannons range
+                //Once a POI is found in range of cannons, following POIs MUST ALSO be in range to be considered
+                if (shootablePoiGoodAngleSoFar)
+                {
+                    if (poiInfos[i].dist < closestShootablePoi && shootablePoiGoodAngle)
+                    {
+                        shootablePoi = i;
+                        closestShootablePoi = poiInfos[i].dist;
+                    }
+                }
+                else
+                {
+                    if (poiInfos[i].dist < closestShootablePoi || shootablePoiGoodAngle)
+                    {
+                        anythingToShoot = true;
+                        shootablePoi = i;
+                        closestShootablePoi = poiInfos[i].dist;
+                        if(shootablePoiGoodAngle)
+                        {
+                            shootablePoiGoodAngleSoFar = true;
+                        }
+                    }
+                }
             }
         }
 
@@ -415,8 +453,8 @@ public class boatControlAI : MonoBehaviour
 
             if (hpi == -1)
             {
-                Debug.Log("Nothing left on the frontier");
-                Debug.Log("Path not found");
+                //Debug.Log("Nothing left on the frontier");
+                //Debug.Log("Path not found");
                 canReachTarget = false;
                 return;
             }
@@ -442,7 +480,7 @@ public class boatControlAI : MonoBehaviour
                 pathingWaypoints.RemoveAt(pathingWaypoints.Count - 1);
                 pathingWaypoints.RemoveAt(0);
 
-                Debug.Log("Path found");
+                //Debug.Log("Path found");
                 canReachTarget = true;
                 return;
             }
@@ -606,7 +644,7 @@ public class boatControlAI : MonoBehaviour
 
             //sets aimingAtTargetPOI, depending on targetPOI type + distance, + this ship class
             //aimingAtTargetPOI means the ship is positioning itself to fire upon its targetPOI
-            if (poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectiveBoat ||
+            if (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
                 poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
                 poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort)
             {
@@ -647,7 +685,7 @@ public class boatControlAI : MonoBehaviour
                 {
                     //when targeting enemy ships, offset their rotation a little bit, to enter a better orbit around their target
                     //only does so when not pathfinding
-                    if (!pathfinding && ((poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectiveBoat ||
+                    if (!pathfinding && ((poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
                          poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat) &&
                          poiInfos[targetPoi].dist > targetWaypointAimCircleRadius && poiInfos[targetPoi].dist <= 100))
                     {
@@ -675,7 +713,7 @@ public class boatControlAI : MonoBehaviour
                 //set moveIn
                 //sets to 0 if the target is >45deg away OR
                 //(stopAtTarget enabled AND EITHER the target is close enough, OR its moving fast enough to reach the target just by coasting)
-                if (stopAtTarget && (poiInfos[targetPoi].dist < 5 || (bm.outSpd / bm.rb.linearDamping >= poiInfos[targetPoi].dist)))
+                if (stopAtTarget && (poiInfos[targetPoi].dist < 20 || (bm.outSpd / bm.rb.linearDamping >= poiInfos[targetPoi].dist)))
                 {
                     stoppingAtTarget = true;
                 }
@@ -684,7 +722,7 @@ public class boatControlAI : MonoBehaviour
                     stoppingAtTarget = false;
                 }
 
-                if (Mathf.Abs(targetWaypointAngle + targetWaypointAngleCircleAdj) > 15 || stoppingAtTarget)
+                if (Mathf.Abs(targetWaypointAngle + targetWaypointAngleCircleAdj) > 45 || stoppingAtTarget)
                 {
                     moveIn = 0;
 
@@ -768,6 +806,53 @@ public class boatControlAI : MonoBehaviour
         // ------ SHOOTING ------
 
 
+        //Special usage happens before normal shooting
+        switch (bc.shipClass)
+        {
+            case boatCombat.Classes.Cutter:
+
+                if (poiInfos[targetPoi].dist <= 25 && poiInfos[targetPoi].dist >= 10 && 
+                    (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                    poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat))
+                {
+                    targetToThisLocal = poiObjects[targetPoi].transform.InverseTransformPoint(this.transform.position);
+                    targetToThisLocal.y = 0;
+                    targetToThisAngle = Mathf.Abs(Vector3.SignedAngle(Vector3.forward, targetToThisLocal, Vector3.up));
+                    //bc.UseSpecial();
+                }
+                else if (anythingToShoot && poiInfos[shootablePoi].dist <= 25 && poiInfos[targetPoi].dist >= 10 &&
+                    (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                    poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat))
+                {
+                    targetToThisLocal = poiObjects[shootablePoi].transform.InverseTransformPoint(this.transform.position);
+                    targetToThisLocal.y = 0;
+                    targetToThisAngle = Mathf.Abs(Vector3.SignedAngle(Vector3.forward, targetToThisLocal, Vector3.up));
+                    //bc.UseSpecial();
+                }
+                else
+                {
+                    targetToThisLocal = Vector3.zero;
+                    targetToThisAngle = 9999;
+                }
+
+                if (targetToThisAngle <= 5)
+                {
+                    bc.UseSpecial();
+                }
+
+                break;
+
+            case boatCombat.Classes.Brigantine:
+                break;
+            case boatCombat.Classes.Frigate:
+                break;
+            case boatCombat.Classes.Galleon:
+                if (goodAnglePois >= 2)
+                {
+                    bc.UseSpecial();
+                }
+                break;
+        }
         // If not already aiming, Gets the global position and velocity of its target
         if (!isAiming)
         {
@@ -775,7 +860,7 @@ public class boatControlAI : MonoBehaviour
             {
                 shootableWaypoint = poiInfos[shootablePoi].globalPos;
 
-                if (poiInfos[shootablePoi].poiType == PoiInfo.Types.ObjectiveBoat ||
+                if (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
                     poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat)
                 {
                     shootableWaypointVel = poiObjects[shootablePoi].GetComponent<boatMove>().globalMoveDir;
@@ -804,14 +889,15 @@ public class boatControlAI : MonoBehaviour
         reticle.transform.position += shootableWaypointVel * (reticle.transform.localPosition.magnitude / cannonballSpeed);
 
         //Finds the distance between the reticle and the relevant cannons, to check if its in range
-        if (reticle.transform.localPosition.x >= 0 || bc.shipClass == boatCombat.Classes.Cutter)
-        {
-            shootableCannonCentreDist = Vector3.Distance(cannonCentreR, reticle.transform.localPosition);
-        }
-        else
-        {
-            shootableCannonCentreDist = Vector3.Distance(cannonCentreL, reticle.transform.localPosition);
-        }
+        //if (reticle.transform.localPosition.x >= 0 || bc.shipClass == boatCombat.Classes.Cutter)
+        //{
+        //    shootableCannonCentreDist = Vector3.Distance(cannonCentreR, reticle.transform.localPosition);
+        //}
+        //else
+        //{
+        //    shootableCannonCentreDist = Vector3.Distance(cannonCentreL, reticle.transform.localPosition);
+        //}
+        shootableCannonCentreDist = FindCannonCentreDist(reticle.transform.localPosition);
 
         if(shootableCannonCentreDist > 30.5f)
         {
@@ -854,6 +940,18 @@ public class boatControlAI : MonoBehaviour
         reticle.transform.rotation = input;
     }
 
+    float FindCannonCentreDist(Vector3 vecIn)
+    {
+        if (vecIn.x >= 0 || bc.shipClass == boatCombat.Classes.Cutter)
+        {
+            return Vector3.Distance(cannonCentreR, vecIn);
+        }
+        else
+        {
+            return Vector3.Distance(cannonCentreL, vecIn);
+        }
+    }
+
     void AimCannonsAtShootable()
     {
         if (anythingToShoot)
@@ -876,6 +974,10 @@ public class boatControlAI : MonoBehaviour
 
             steerIn = RotateBoat(shootWayLocAng);
         }
+        else
+        {
+            steerIn = 0;
+        }
     }
 }
 
@@ -888,8 +990,9 @@ public class PoiInfo
     public bool inUse;
     public int priority;
     public Vector3 globalPos;
+    public Vector3 localPos;
     public float dist;
-    public enum Types {ObjectivePoint, ObjectiveBoat, EnemyBoat, EnemyFort, DyingAlly, DyingEnemy, ResourcePickup};
+    public enum Types {ObjectivePoint, EnemyObjectiveBoat, AllyObjectiveBoat, EnemyBoat, EnemyFort, DyingAlly, DyingEnemy, ResourcePickup};
     public Types poiType;
 
     public float poiMaxDist;
@@ -899,6 +1002,7 @@ public class PoiInfo
         Reset();
         priority = 0;
         globalPos = Vector3.zero;
+        localPos = Vector3.zero;
         dist = 0;
         poiType = Types.ObjectivePoint;
 
@@ -908,13 +1012,15 @@ public class PoiInfo
     {
         inUse = false;
     }
-    public void Set(Types poiTypeIn, Vector3 globalPosIn, Vector3 thisPosIn)
+    public void Set(Types poiTypeIn, Vector3 globalPosIn, Transform transformIn)
     {
         inUse = true;
 
         poiType = poiTypeIn;
         globalPos = globalPosIn;
-        dist = Vector3.Distance(thisPosIn, globalPos);
+        dist = Vector3.Distance(transformIn.position, globalPos);
+        localPos = transformIn.InverseTransformPoint(globalPos);
+        localPos.y = 0;
 
         //handles different priorities for different types/distances
         switch (poiType)
@@ -923,7 +1029,7 @@ public class PoiInfo
                 if (dist <= poiMaxDist) { priority = 1; }
                 else { priority = 0; }
                 break;
-            case Types.ObjectiveBoat:
+            case Types.EnemyObjectiveBoat:
                 if (dist <= poiMaxDist) { priority = 1; }
                 else { priority = 0; }
                 break;

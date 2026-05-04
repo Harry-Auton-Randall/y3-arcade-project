@@ -2758,7 +2758,7 @@ MonoBehaviour:
   respawnTime: 10
   lives: 0
   maxLives: 1
-  totalShips: 16
+  totalShips: 99
   allowedShips: 00000000010000000200000003000000
   teams: 0
   playerTeam: 0

@@ -305,6 +305,8 @@ public class RoundManager : MonoBehaviour
         instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team, id, respawning);
         instance.transform.position = spawnPos.position;
         instance.transform.rotation = spawnPos.rotation;
+        instance.transform.position += spawnPos.forward * Random.Range(-1f, 1f);
+        instance.transform.position += spawnPos.right * Random.Range(-1f, 1f);
 
     }
 

@@ -80,6 +80,10 @@ public class boatCombat : MonoBehaviour
     int latestDamageID = -1;
     int latestFireID = -1;
 
+    //prevents bug where if multiple damage sources kill the ship in one frame, multiple points are given out
+    //(Easy to replicate by placing a bunch of mines inside the ship while paused)
+    bool tookLethalDamage = false;
+
     Collider hullCollider;
 
     public boatMove bm;
@@ -104,6 +108,7 @@ public class boatCombat : MonoBehaviour
     Renderer bomo; //barrage-or-mortar outline
     public bool aimingMortar;
     public Vector2 mortarAimPos;
+    public bool specialCharged;
 
     void Awake()
     {
@@ -325,7 +330,7 @@ public class boatCombat : MonoBehaviour
 
     public void TakeDamage(int damage, bool fire, bool chain, int shooterIDIn)
     {
-        if (!respawnImmunity)
+        if (!respawnImmunity && !tookLethalDamage)
         {
             health -= damage;
 
@@ -359,6 +364,7 @@ public class boatCombat : MonoBehaviour
 
     void Sink()
     {
+        tookLethalDamage = true;
         if (isPlayer)
         {
             GameObject.Find("/deathScreen").GetComponent<DeathScreen>().Enable(gameID, transform.Find("CameraBase/CameraMove/CameraRot/PlayerCamera"));
@@ -514,6 +520,46 @@ public class boatCombat : MonoBehaviour
         }
     }
 
+    //For checking if a location is within a ship's cannon angle
+    public bool CheckCannonAngle(float x, float y)
+    {
+        if (shipClass == Classes.Cutter)
+        {
+            if ((y - cannonCentreR.y < -1 * (x - cannonCentreR.x))
+                 && (y - cannonCentreR.y < x - cannonCentreR.x))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            //left
+            if ((y - cannonCentreL.y < -1 * (x - cannonCentreL.x))
+                 && (y - cannonCentreL.y > x - cannonCentreL.x)
+                 && (x <= -1 * cannonXDist))
+            {
+                return true;
+            }
+            //right
+            else if ((y - cannonCentreR.y > -1 * (x - cannonCentreR.x))
+                  && (y - cannonCentreR.y < x - cannonCentreR.x)
+                  && (x >= cannonXDist))
+            {
+                return true;
+            }
+            //neither
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+
     void Update()
     {
         if (respawnImmunity && (respawnTime < rMan.spawnImmunityTime))
@@ -585,6 +631,15 @@ public class boatCombat : MonoBehaviour
             reloadSpecial = maxReloadSpecial;
         }
 
+        if (reloadSpecial >= maxReloadSpecial)
+        {
+            specialCharged = true;
+        }
+        else
+        {
+            specialCharged = false;
+        }
+
         //Sort out valid cannon aiming
         if (shipClass == Classes.Galleon && specialRunning)
         {
@@ -610,8 +665,9 @@ public class boatCombat : MonoBehaviour
         {
             if (shipClass == Classes.Cutter)
             {
-                if ((aimPos.y - cannonCentreR.y < -1 * (aimPos.x - cannonCentreR.x))
-                 && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x))
+                //if ((aimPos.y - cannonCentreR.y < -1 * (aimPos.x - cannonCentreR.x))
+                // && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x))
+                if (CheckCannonAngle(aimPos.x, aimPos.y))
                 {
                     cannonRangeR.enabled = true;
                     goodAimR = true;
@@ -629,22 +685,30 @@ public class boatCombat : MonoBehaviour
             else
             {
                 //Determines which broadside (if any) is valid, determines goodAim values + reloadProgress
-                if ((aimPos.y - cannonCentreL.y < -1 * (aimPos.x - cannonCentreL.x))
-                 && (aimPos.y - cannonCentreL.y > aimPos.x - cannonCentreL.x)
-                 && (aimPos.x <= -1 * cannonXDist))
+                //if ((aimPos.y - cannonCentreL.y < -1 * (aimPos.x - cannonCentreL.x))
+                // && (aimPos.y - cannonCentreL.y > aimPos.x - cannonCentreL.x)
+                // && (aimPos.x <= -1 * cannonXDist))
+                if (CheckCannonAngle(aimPos.x, aimPos.y))
                 {
-                    goodAimL = true;
-                    goodAimR = false;
-                    reloadProgress = 100 * (reloadL / maxReload);
+                    if (aimPos.x < 0)
+                    {
+                        goodAimL = true;
+                        goodAimR = false;
+                        reloadProgress = 100 * (reloadL / maxReload);
+                    }
+                    else
+                    {
+                        goodAimR = true;
+                        goodAimL = false;
+                        reloadProgress = 100 * (reloadR / maxReload);
+                    }
                 }
-                else if ((aimPos.y - cannonCentreR.y > -1 * (aimPos.x - cannonCentreR.x))
-                      && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x)
-                      && (aimPos.x >= cannonXDist))
-                {
-                    goodAimR = true;
-                    goodAimL = false;
-                    reloadProgress = 100 * (reloadR / maxReload);
-                }
+                //else if ((aimPos.y - cannonCentreR.y > -1 * (aimPos.x - cannonCentreR.x))
+                //      && (aimPos.y - cannonCentreR.y < aimPos.x - cannonCentreR.x)
+                //      && (aimPos.x >= cannonXDist))
+                //{
+                    
+                //}
                 else
                 {
                     goodAimR = false;
@@ -850,7 +914,7 @@ public class boatCombat : MonoBehaviour
     }
     public void MoveMortarOutline()
     {
-        if (aimingMortar && reloadSpecial >= maxReloadSpecial)
+        if (aimingMortar && specialCharged)
         {
             bomo.enabled = true;
             bomo.transform.localPosition = new Vector3(mortarAimPos.x, bomo.transform.localPosition.y, mortarAimPos.y);
@@ -864,7 +928,7 @@ public class boatCombat : MonoBehaviour
 
     public void UseSpecial()
     {
-        if (reloadSpecial >= maxReloadSpecial && !specialRunning)
+        if (specialCharged && !specialRunning)
         {
             switch (shipClass)
             {
@@ -916,6 +980,7 @@ public class boatCombat : MonoBehaviour
     IEnumerator BarrageSpecial()
     {
         bomo.enabled = true;
+        bomo.material = cannonRangeMat;
         for (int i=0;i<cannonsL.Length;i++)
         {
             cannonsL[i].transform.localRotation = Quaternion.Euler(0, 270, 0);
@@ -923,6 +988,7 @@ public class boatCombat : MonoBehaviour
         }
 
         yield return new WaitForSeconds(1.75f);
+        bomo.material = cannonRangeMatEmpty;
         for (int i=0;i<4;i++)
         {
             for (int j = 0; j < cannonsL.Length; j++)
