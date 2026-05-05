@@ -83,10 +83,10 @@ public class Mine : MonoBehaviour
                 Detonate();
             }
         }
-        else if (collision.gameObject.layer == LayerMask.NameToLayer("mine"))
-        {
-            Detonate();
-        }
+        //else if (collision.gameObject.layer == LayerMask.NameToLayer("mine"))
+        //{
+        //    Detonate();
+        //}
     }
     void OnTriggerEnter(Collider collision)
     {

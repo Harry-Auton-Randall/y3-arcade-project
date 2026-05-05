@@ -259,6 +259,7 @@ public class RoundManager : MonoBehaviour
                 {
                     shipStatuses[i].respawnProgress = 0f;
                     shipStatuses[i].isAlive = true;
+                    shipStatuses[i].hasLives = true;
                     switch (shipStatuses[i].team)
                     {
                         case 0:
@@ -277,7 +278,7 @@ public class RoundManager : MonoBehaviour
 
         //sort scoresSorted by points of respective shipStatus
         //System not included at the top because that causes every Random to throw compile errors
-        System.Array.Sort(scoresSorted, (a, b) => (shipStatuses[b].score).CompareTo(shipStatuses[a].score));
+        System.Array.Sort(scoresSorted, (a, b) => (shipStatuses[b].hasLives, shipStatuses[b].score).CompareTo((shipStatuses[a].hasLives, shipStatuses[a].score)));
     }
 
     void SpawnShip(int id, Transform spawnPos, bool respawning)
@@ -285,7 +286,7 @@ public class RoundManager : MonoBehaviour
         if (shipStatuses[id].isPlayer)
         {
             //temporary
-            ChangeClass(id, playerStartingClass);
+            //ChangeClass(id, playerStartingClass);
 
             ds.Disable();
             switch (shipStatuses[id].shipClass)
@@ -371,6 +372,7 @@ public class ShipInfo
 
     public bool isAlive;
     public int lives;
+    public bool hasLives; //specifically for scoreboarding
 
     public int score;
 
@@ -383,10 +385,19 @@ public class ShipInfo
         name = nameIn;
         isAlive = true;
         score = 0;
+        hasLives = true;
     }
     public void SetLives(int livesIn)
     {
         lives = livesIn;
+        if (lives > 0)
+        {
+            hasLives = true;
+        }
+        else
+        {
+            hasLives = false; 
+        }
     }
     public void SetRespawn(float respawnIn)
     {
@@ -402,7 +413,11 @@ public class ShipInfo
         if (livesOn)
         {
             lives -= 1;
-            if (lives < 0) { lives = 0; }
+            if (lives <= 0)
+            { 
+                lives = 0; 
+                hasLives = false;
+            }
         }
         respawnProgress = respawnTimeIn;
     }

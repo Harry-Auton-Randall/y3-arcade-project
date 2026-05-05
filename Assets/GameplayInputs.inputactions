@@ -441,6 +441,34 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "Menus",
+            "id": "bf6de947-1300-4bdf-8d36-66624d916866",
+            "actions": [
+                {
+                    "name": "ShowScores",
+                    "type": "Value",
+                    "id": "ed100db5-a64d-402c-a891-984c5a352e2a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "33a7f6e8-40af-45b6-90b2-db9ddbcdb498",
+                    "path": "<Keyboard>/tab",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ShowScores",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []

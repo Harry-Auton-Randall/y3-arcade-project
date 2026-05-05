@@ -88,7 +88,7 @@ public class boatControlPlayer : MonoBehaviour
     }
     void OnDisable()
     {
-        mainActions.Enable();
+        mainActions.Disable();
         camRotCWA.performed -= OnCamRotCW;
         camRotCCWA.performed -= OnCamRotCCW;
         shootA.performed -= OnShoot;
