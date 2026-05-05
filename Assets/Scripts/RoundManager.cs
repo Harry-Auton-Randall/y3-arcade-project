@@ -164,16 +164,16 @@ public class RoundManager : MonoBehaviour
             shipStatuses = new ShipInfo[totalShips];
             if (player)
             {
-                shipStatuses[0] = new ShipInfo(true, playerTeam, playerStartingClass);
+                shipStatuses[0] = new ShipInfo(true, playerTeam, playerStartingClass, "You");
             }
             else
             {
-                shipStatuses[0] = new ShipInfo(false, playerTeam, playerStartingClass);
+                shipStatuses[0] = new ShipInfo(false, playerTeam, playerStartingClass, "CPU 0");
             }
 
             for (int i=1;i<totalShips;i++)
             {
-                shipStatuses[i] = new ShipInfo(false, 0, allowedShips[Random.Range(0, allowedShips.Count)]);
+                shipStatuses[i] = new ShipInfo(false, 0, allowedShips[Random.Range(0, allowedShips.Count)], "CPU " + i);
             }
         }
 
@@ -302,7 +302,7 @@ public class RoundManager : MonoBehaviour
             }
         }
 
-        instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team, id, respawning);
+        instance.GetComponent<boatCombat>().SetTeamStuff(shipStatuses[id].team, id, shipStatuses[id].name, respawning);
         instance.transform.position = spawnPos.position;
         instance.transform.rotation = spawnPos.rotation;
         instance.transform.position += spawnPos.forward * Random.Range(-1f, 1f);
@@ -318,12 +318,20 @@ public class RoundManager : MonoBehaviour
     public void ScoreIncSolo(int id)
     {
         scoresSolo[id] += 1;
-        Debug.Log(id + "'s score increases to " + scoresSolo[id]);
+        Debug.Log(shipStatuses[id].name + "'s score increases to " + scoresSolo[id]);
     }
 
     public void Killfeed(int killerId, int victimId)
     {
-        Debug.Log(killerId + " sunk " + victimId);
+        if (killerId == -1)
+        {
+            Debug.Log(shipStatuses[victimId].name + " sunk due to their own incompetence.");
+        }
+        else
+        {
+            Debug.Log(shipStatuses[killerId].name + " sunk " + shipStatuses[victimId].name);
+        }
+        
     }
 
     public void ChangeClass(int id, int classIn)
@@ -337,16 +345,18 @@ public class ShipInfo
     public bool isPlayer;
     public int team;
     public int shipClass;
+    public string name;
 
     public bool isAlive;
     public int lives;
 
     public float respawnProgress;
-    public ShipInfo(bool isPlayerIn, int teamIn, int shipClassIn)
+    public ShipInfo(bool isPlayerIn, int teamIn, int shipClassIn, string nameIn)
     {
         isPlayer = isPlayerIn;
         team = teamIn;
         shipClass = shipClassIn;
+        name = nameIn;
         isAlive = true;
     }
     public void SetLives(int livesIn)

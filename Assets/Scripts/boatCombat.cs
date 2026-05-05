@@ -10,6 +10,7 @@ public class boatCombat : MonoBehaviour
     public bool isPlayer = false;
     public int team = 0;
     public int gameID;
+    string playerName;
     public RoundManager rMan;
 
     //stats
@@ -291,10 +292,11 @@ public class boatCombat : MonoBehaviour
         //SetTeamStuff(team); //TEMPORARY - base team stuff off of scene-specified settings, need to change eventually
     }
 
-    public void SetTeamStuff(int teamIn, int gameIDIn, bool respawning)
+    public void SetTeamStuff(int teamIn, int gameIDIn, string nameIn, bool respawning)
     {
         gameID = gameIDIn;
         team = teamIn;
+        playerName = nameIn;
         if(isPlayer || (team == rMan.playerTeam && team != 0))
         {
             cannonRangeMat = Resources.Load("SolidMaterials/white30", typeof(Material)) as Material;
