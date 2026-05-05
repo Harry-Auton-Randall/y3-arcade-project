@@ -708,7 +708,7 @@ public class boatControlAI : MonoBehaviour
                 //Specifically for when a brigantine is currently ramming
                 //leads its "shot"
 
-                //gets the
+                //gets the ratio between this this ship's forward speed and the target's speed relative to this ship's forward direction
                 targetWaypointVelLocal = transform.InverseTransformDirection(poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity);
                 if (targetWaypointVelLocal.z > 0) { targetWaypointVelLocal.z = 0; }
                 zSpeedRatio = (bc.bm.outSpd - targetWaypointVelLocal.z) / bc.bm.outSpd;

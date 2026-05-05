@@ -6,6 +6,9 @@ public class boatCombat : MonoBehaviour
     public enum Classes {Cutter, Brigantine, Frigate, Galleon};
     public Classes shipClass = Classes.Cutter;
 
+    //for inspector use only - instantly sinks the ship when clicked
+    public bool suicideButton = false;
+
     //team/ID stuff
     public bool isPlayer = false;
     public int team = 0;
@@ -19,6 +22,8 @@ public class boatCombat : MonoBehaviour
     public int maxHealth;
     float maxReload;
     float maxReloadSpecial;
+
+    public float specialReloadFloat;
 
     float reloadMult = 1f;
 
@@ -114,6 +119,8 @@ public class boatCombat : MonoBehaviour
 
     void Awake()
     {
+        suicideButton = false;
+
         volleying = 0;
 
         bm = GetComponent<boatMove>();
@@ -567,6 +574,11 @@ public class boatCombat : MonoBehaviour
 
     void Update()
     {
+        if (suicideButton)
+        {
+            Sink();
+        }
+
         if (respawnImmunity && (respawnTime < rMan.spawnImmunityTime))
         {
             respawnTime += Time.deltaTime;
@@ -644,6 +656,7 @@ public class boatCombat : MonoBehaviour
         {
             specialCharged = false;
         }
+        specialReloadFloat = reloadSpecial / maxReloadSpecial;
 
         //Sort out valid cannon aiming
         if (shipClass == Classes.Galleon && specialRunning)

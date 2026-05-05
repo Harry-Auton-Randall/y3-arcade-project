@@ -5,10 +5,15 @@ public class boatRamTip : MonoBehaviour
     boatCombat bc;
     int damage = 10;
     float speed, speedPrior;
+    float speedTarget = 999f;
 
     void Awake()
     {
         bc = transform.parent.GetComponent<boatCombat>();
+    }
+    void Start()
+    {
+        speedTarget = (bc.speed + (bc.speed * bc.bm.chargeSpeedMult)) / 2; //the midpoint between full speed and full boosted speed
     }
 
     void FixedUpdate()
@@ -27,14 +32,14 @@ public class boatRamTip : MonoBehaviour
                 //Debug.Log("current speed: " + speed);
                 //Debug.Log("speed last phys update: " + speedPrior);
                 //Debug.Log("speed stat: " + bc.speed);
-                if (speedPrior >= bc.speed)
+                if (speedPrior >= speedTarget)
                 {
                     collision.transform.parent.GetComponent<boatCombat>().TakeDamage(damage, false, false, bc.gameID);
                     //Debug.Log(damage);
                 }
                 else if (speedPrior > 0)
                 {
-                    int damageOut = (int)(damage * (speedPrior / bc.speed));
+                    int damageOut = (int)(damage * (speedPrior / speedTarget));
                     collision.transform.parent.GetComponent<boatCombat>().TakeDamage(damageOut, false, false, bc.gameID);
                     //Debug.Log(damageOut);
                 }

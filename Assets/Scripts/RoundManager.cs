@@ -46,9 +46,14 @@ public class RoundManager : MonoBehaviour
 
     //GAME MODE STUFF
     public int mode = 0;
-    public int[] scoresSolo;
+    //public int[] scoresSolo;
     public int[] scoresTeam;
-    public int scoreTarget = 50;
+    public int scoreTarget = 5;
+    public float timeLeft = 300;
+
+    public bool scoreOrTime = true; //true for score target, false for time limit
+
+    public int[] scoresSorted;
 
 
     //For rotating UI elements based on camera rotation
@@ -178,16 +183,19 @@ public class RoundManager : MonoBehaviour
         }
 
         //shipStatuses = new ShipInfo[] { new ShipInfo(true, 0, playerStartingClass) };
-        scoresSolo = new int[shipStatuses.Length];
+        //scoresSolo = new int[shipStatuses.Length];
+        scoresSorted = new int[shipStatuses.Length];
         if (teams)
         {
             scoresTeam = new int[] { 0, 0 };
         }
+
         for (int i = 0; i < shipStatuses.Length; i++)
         {
             shipStatuses[i].SetLives(maxLives);
             shipStatuses[i].SetRespawn(0f);
-            scoresSolo[i] = 0;
+            //scoresSolo[i] = 0;
+            scoresSorted[i] = i;
         }
     }
     void Start()
@@ -233,6 +241,15 @@ public class RoundManager : MonoBehaviour
 
     void Update()
     {
+        if (!scoreOrTime)
+        {
+            timeLeft -= Time.deltaTime;
+            if (timeLeft < 0)
+            {
+                timeLeft = 0;
+            }
+        }
+
         for (int i=0;i<shipStatuses.Length;i++)
         {
             if (shipStatuses[i].respawnProgress != 0f)
@@ -257,6 +274,10 @@ public class RoundManager : MonoBehaviour
                 }
             }
         }
+
+        //sort scoresSorted by points of respective shipStatus
+        //System not included at the top because that causes every Random to throw compile errors
+        System.Array.Sort(scoresSorted, (a, b) => (shipStatuses[b].score).CompareTo(shipStatuses[a].score));
     }
 
     void SpawnShip(int id, Transform spawnPos, bool respawning)
@@ -317,8 +338,9 @@ public class RoundManager : MonoBehaviour
 
     public void ScoreIncSolo(int id)
     {
-        scoresSolo[id] += 1;
-        Debug.Log(shipStatuses[id].name + "'s score increases to " + scoresSolo[id]);
+        //scoresSolo[id] += 1;
+        shipStatuses[id].score += 1;
+        Debug.Log(shipStatuses[id].name + "'s score increases to " + shipStatuses[id].score);
     }
 
     public void Killfeed(int killerId, int victimId)
@@ -350,6 +372,8 @@ public class ShipInfo
     public bool isAlive;
     public int lives;
 
+    public int score;
+
     public float respawnProgress;
     public ShipInfo(bool isPlayerIn, int teamIn, int shipClassIn, string nameIn)
     {
@@ -358,6 +382,7 @@ public class ShipInfo
         shipClass = shipClassIn;
         name = nameIn;
         isAlive = true;
+        score = 0;
     }
     public void SetLives(int livesIn)
     {
