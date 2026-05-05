@@ -51,8 +51,8 @@ public class RoundManager : MonoBehaviour
     public int scoreTarget = 50;
 
 
-    //For rotating Ai's reticles
-    public Quaternion playerReticleRotation;
+    //For rotating UI elements based on camera rotation
+    public float playerCamRotation = 0;
 
     void Awake()
     {

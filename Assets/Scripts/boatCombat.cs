@@ -10,7 +10,7 @@ public class boatCombat : MonoBehaviour
     public bool isPlayer = false;
     public int team = 0;
     public int gameID;
-    string playerName;
+    public string playerName;
     public RoundManager rMan;
 
     //stats

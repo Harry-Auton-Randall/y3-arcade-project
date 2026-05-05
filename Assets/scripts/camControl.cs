@@ -18,6 +18,8 @@ public class camControl : MonoBehaviour
     public float cameraRotYGrad;
     float camRotVel;
 
+    boatCombat bc;
+
     void Awake()
     {
         screenSize.x = Screen.width;
@@ -30,6 +32,8 @@ public class camControl : MonoBehaviour
         camSpy = transform.Find("CameraBase/CameraMove/CameraSpyglass").GetComponent<Camera>();
 
         camPosition = camMove.localPosition;
+
+        bc = GetComponent<boatCombat>();
     }
 
     public void CamControlUpdate()
@@ -80,5 +84,7 @@ public class camControl : MonoBehaviour
         }
         //13.5 = extra view distance in vertical direction. total view area = 2*(22.5+13.5) = 72 vertical and (72 * 16/9 =) 128m horizontal
         camMove.localPosition = camPosition;
+
+        bc.rMan.playerCamRotation = camRot.eulerAngles.y;
     }
 }

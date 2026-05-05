@@ -1081,6 +1081,10 @@ public class boatControlAI : MonoBehaviour
             //reticle.transform.rotation = bc.rMan.playerReticleRotation;
         }
     }
+    void LateUpdate()
+    {
+        reticle.transform.rotation = Quaternion.Euler(0, bc.rMan.playerCamRotation, 0);
+    }
 
     float MortarMathEquation(float x)
     {

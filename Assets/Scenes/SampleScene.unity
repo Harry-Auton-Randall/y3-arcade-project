@@ -2755,7 +2755,7 @@ MonoBehaviour:
   brigantineA: {fileID: 5675262026470004130, guid: 63aa0228a94231f48afc3e85dc4cab33, type: 3}
   frigateA: {fileID: 5919560032276849124, guid: 06d7bc1852de5934ea44aa8081e4d11b, type: 3}
   galleonA: {fileID: 4221764355320404644, guid: 777488e4ce667a745874996e807c7e6f, type: 3}
-  respawnTime: 1
+  respawnTime: 10
   lives: 0
   maxLives: 1
   totalShips: 99
@@ -2774,7 +2774,7 @@ MonoBehaviour:
   scoresSolo: 
   scoresTeam: 
   scoreTarget: 50
-  playerReticleRotation: {x: 0, y: 0, z: 0, w: 0}
+  playerCamRotation: 0
 --- !u!1 &725419302
 GameObject:
   m_ObjectHideFlags: 0
