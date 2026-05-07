@@ -89,7 +89,7 @@ public class RoundManagerMenus : MonoBehaviour
         if (rMan.gameStarted)
         {
             pauseTitleText.text = "YOU WIN";
-            if (mapId >= PlayerPrefs.GetInt("unlockedMaps"))
+            if (mapId != -1 && mapId >= PlayerPrefs.GetInt("unlockedMaps"))
             {
                 PlayerPrefs.SetInt("unlockedMaps", mapId + 1);
                 PlayerPrefs.Save();
@@ -123,11 +123,12 @@ public class RoundManagerMenus : MonoBehaviour
 
     public void RetryButtonPress()
     {
+        rMan.RemakePasser();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
     public void QuitButtonPress()
     {
-        //
+        SceneManager.LoadScene("MainMenu");
     }
 
     void Update()

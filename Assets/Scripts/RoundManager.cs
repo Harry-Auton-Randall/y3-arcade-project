@@ -6,13 +6,16 @@ public class RoundManager : MonoBehaviour
 {
     int mapId;
     string mapName;
+    DataPasser dps;
+
+    public GameObject dataPasser;
 
     public bool PlayerCheatButton;
     GameObject startCanvas;
     Text startTitle, startDesc;
 
     //temporary
-    public int playerStartingClass;
+    //public int playerStartingClass;
     public bool player; //purely for debugging - if false, spawns an AI in the player's place
 
     //SPAWNING STUFF
@@ -70,12 +73,78 @@ public class RoundManager : MonoBehaviour
     //For rotating UI elements based on camera rotation
     public float playerCamRotation = 0;
 
+    public void RemakePasser()
+    {
+        instance = Instantiate(dataPasser);
+        DataPasser dps2 = instance.GetComponent<DataPasser>();
+
+        dps2.id = mapId;
+        dps2.mapName = this.mapName;
+
+        dps2.player = this.player;
+        dps2.shipNo = totalShips;
+        dps2.shipTypes = new int[allowedShips.Count];
+        for (int i=0;i<allowedShips.Count;i++)
+        {
+            dps2.shipTypes[i] = allowedShips[i];
+        }
+
+        dps2.scoreOrTime = this.scoreOrTime;
+        dps2.score = this.scoreTarget;
+
+        dps2.lives = this.lives;
+        dps2.maxLives = this.maxLives;
+
+        dps2.respawnTime = this.respawnTime;
+        dps2.spawnImmunityTime = this.spawnImmunityTime;
+    }
+
     void Awake()
     {
         Time.timeScale = 1;
 
         gameStarted = false;
         gameEnded = false;
+
+        //Reading info from DataPasser, if present
+        if (GameObject.Find("/DataPasser(Clone)") != null)
+        {
+            Debug.Log("Level selected from menu");
+            dps = GameObject.Find("/DataPasser(Clone)").GetComponent<DataPasser>();
+
+            mapId = dps.id;
+            this.mapName = dps.mapName;
+
+            this.player = dps.player;
+            totalShips = dps.shipNo;
+            allowedShips = new List<int>();
+            for (int i=0;i<dps.shipTypes.Length;i++)
+            {
+                allowedShips.Add(dps.shipTypes[i]);
+            }
+
+            this.scoreOrTime = dps.scoreOrTime;
+            scoreTarget = dps.score;
+
+            this.lives = dps.lives;
+            this.maxLives = dps.maxLives;
+
+            this.respawnTime = dps.respawnTime;
+            this.spawnImmunityTime = dps.spawnImmunityTime;
+
+            Destroy(dps.gameObject);
+        }
+        else
+        {
+            Debug.Log("Level not selected from menu");
+            mapId = -1;
+            mapName = "N/A";
+        }
+
+        if (!scoreOrTime)
+        {
+            timeLeft = scoreTarget; //When time-based, scoreTarget doubles as the full time limit
+        }
 
         //TEMPORARY
         teams = false;
@@ -185,11 +254,11 @@ public class RoundManager : MonoBehaviour
             shipStatuses = new ShipInfo[totalShips];
             if (player)
             {
-                shipStatuses[0] = new ShipInfo(true, playerTeam, playerStartingClass, "You");
+                shipStatuses[0] = new ShipInfo(true, playerTeam, 0, "You"); //class changed when starting buttons pressed, doesn't matter which one is picked here
             }
             else
             {
-                shipStatuses[0] = new ShipInfo(false, playerTeam, playerStartingClass, "CPU 0");
+                shipStatuses[0] = new ShipInfo(false, playerTeam, 0, "CPU 0");
             }
 
             for (int i=1;i<totalShips;i++)
