@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class RoundManagerMenus : MonoBehaviour
 {
@@ -118,6 +119,15 @@ public class RoundManagerMenus : MonoBehaviour
     {
         pauseOpen = false;
         Time.timeScale = 1;
+    }
+
+    public void RetryButtonPress()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+    public void QuitButtonPress()
+    {
+        //
     }
 
     void Update()

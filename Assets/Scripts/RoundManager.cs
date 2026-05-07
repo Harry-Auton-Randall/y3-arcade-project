@@ -72,6 +72,8 @@ public class RoundManager : MonoBehaviour
 
     void Awake()
     {
+        Time.timeScale = 1;
+
         gameStarted = false;
         gameEnded = false;
 
