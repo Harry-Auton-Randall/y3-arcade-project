@@ -50,7 +50,7 @@ public class RoundManagerMenus : MonoBehaviour
 
     void Update()
     {
-        if(showScoresA.IsPressed())
+        if(showScoresA.IsPressed() && rMan.gameStarted)
         {
             scoreboardPanel.SetActive(true);
             menusOpen = true;

@@ -1,8 +1,13 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 
 public class RoundManager : MonoBehaviour
 {
+    public bool PlayerCheatButton;
+    GameObject startCanvas;
+    Text startTitle, startDesc;
+
     //temporary
     public int playerStartingClass;
     public bool player; //purely for debugging - if false, spawns an AI in the player's place
@@ -55,12 +60,18 @@ public class RoundManager : MonoBehaviour
 
     public int[] scoresSorted;
 
+    public bool gameStarted;
+    bool gameEnded;
+
 
     //For rotating UI elements based on camera rotation
     public float playerCamRotation = 0;
 
     void Awake()
     {
+        gameStarted = false;
+        gameEnded = false;
+
         //TEMPORARY
         teams = false;
         mode = 0;
@@ -197,9 +208,56 @@ public class RoundManager : MonoBehaviour
             //scoresSolo[i] = 0;
             scoresSorted[i] = i;
         }
+
+        startCanvas = transform.Find("RoundBeginCanvas").gameObject;
+        startTitle = transform.Find("RoundBeginCanvas/sunkText").GetComponent<Text>();
+        startDesc = transform.Find("RoundBeginCanvas/respawningText").GetComponent<Text>();
+
+        if (teams) //when conquest/raid modes are added, they are always team-based so don't need this
+        {
+            startTitle.text = "TEAM ";
+        }
+        else
+        {
+            startTitle.text = "";
+        }
+
+        switch (mode)
+        {
+            case 0:
+                startTitle.text += "DEATHMATCH";
+                if (scoreOrTime)
+                {
+                    startDesc.text = ("Be the first to sink " + scoreTarget + " ships to win");
+                }
+                else
+                {
+                    startDesc.text = ("Sink the most ships within " + (int)timeLeft + " seconds to win");
+                }
+                break;
+        }
     }
-    void Start()
+    //void Start()
+    //{
+    //    if (teams)
+    //    {
+    //    }
+    //    else
+    //    {
+    //        for (int i = 0; i < shipStatuses.Length; i++)
+    //        {
+    //            SpawnShip(i, spawns0[i], false);
+    //        }
+    //    }
+    //}
+
+    public void StartGame(int startingClass)
     {
+        Debug.Log("Button " + startingClass + " pressed");
+        ChangeClass(0, startingClass);
+
+        startCanvas.SetActive(false);
+
         if (teams)
         {
         }
@@ -210,6 +268,7 @@ public class RoundManager : MonoBehaviour
                 SpawnShip(i, spawns0[i], false);
             }
         }
+        gameStarted = true;
     }
 
     void SpawnShuffle(Transform[] spawnsIn)
@@ -241,44 +300,79 @@ public class RoundManager : MonoBehaviour
 
     void Update()
     {
-        if (!scoreOrTime)
+        if (gameStarted)
         {
-            timeLeft -= Time.deltaTime;
-            if (timeLeft < 0)
+            if (!scoreOrTime)
             {
-                timeLeft = 0;
-            }
-        }
-
-        for (int i=0;i<shipStatuses.Length;i++)
-        {
-            if (shipStatuses[i].respawnProgress != 0f)
-            {
-                shipStatuses[i].respawnProgress -= Time.deltaTime;
-                if (shipStatuses[i].respawnProgress <= 0f && !(lives && shipStatuses[i].lives == 0))
+                timeLeft -= Time.deltaTime;
+                if (timeLeft < 0)
                 {
-                    shipStatuses[i].respawnProgress = 0f;
-                    shipStatuses[i].isAlive = true;
-                    shipStatuses[i].hasLives = true;
-                    switch (shipStatuses[i].team)
+                    timeLeft = 0;
+                }
+            }
+
+            for (int i = 0; i < shipStatuses.Length; i++)
+            {
+                if (shipStatuses[i].respawnProgress != 0f)
+                {
+                    shipStatuses[i].respawnProgress -= Time.deltaTime;
+                    if (shipStatuses[i].respawnProgress <= 0f && !(lives && shipStatuses[i].lives == 0))
                     {
-                        case 0:
-                            SpawnShip(i, spawns0[Random.Range(0, spawns0.Length)], true);
-                            break;
-                        case 1:
-                            SpawnShip(i, spawns1[Random.Range(0, spawns1.Length)], true);
-                            break;
-                        case 2:
-                            SpawnShip(i, spawns2[Random.Range(0, spawns2.Length)], true);
-                            break;
+                        shipStatuses[i].respawnProgress = 0f;
+                        shipStatuses[i].isAlive = true;
+                        shipStatuses[i].hasLives = true;
+                        switch (shipStatuses[i].team)
+                        {
+                            case 0:
+                                SpawnShip(i, spawns0[Random.Range(0, spawns0.Length)], true);
+                                break;
+                            case 1:
+                                SpawnShip(i, spawns1[Random.Range(0, spawns1.Length)], true);
+                                break;
+                            case 2:
+                                SpawnShip(i, spawns2[Random.Range(0, spawns2.Length)], true);
+                                break;
+                        }
                     }
                 }
             }
-        }
 
-        //sort scoresSorted by points of respective shipStatus
-        //System not included at the top because that causes every Random to throw compile errors
-        System.Array.Sort(scoresSorted, (a, b) => (shipStatuses[b].hasLives, shipStatuses[b].score).CompareTo((shipStatuses[a].hasLives, shipStatuses[a].score)));
+            if (PlayerCheatButton)
+            {
+                shipStatuses[0].score = 999;
+                PlayerCheatButton = false;
+            }
+
+            //sort scoresSorted by points of respective shipStatus
+            //System not included at the top because that causes every Random to throw compile errors
+            System.Array.Sort(scoresSorted, (a, b) => (shipStatuses[b].hasLives, shipStatuses[b].score).CompareTo((shipStatuses[a].hasLives, shipStatuses[a].score)));
+
+            //Check if game needs to end
+            if (!gameEnded)
+            {
+                if ((scoreOrTime && shipStatuses[scoresSorted[0]].score >= scoreTarget) ||
+                    (!scoreOrTime && timeLeft <= 0))
+                {
+                    EndResult(scoresSorted[0]);
+                }
+            }
+        }
+    }
+
+    void EndResult(int winner)
+    {
+        //PLAN: Repurpose pause menu
+
+        if (winner == 0)
+        {
+            Debug.Log("YOU WIN");
+        }
+        else
+        {
+            Debug.Log(shipStatuses[winner].name + " won, you did not.");
+        }
+        Time.timeScale = 0;
+        gameEnded = true;
     }
 
     void SpawnShip(int id, Transform spawnPos, bool respawning)

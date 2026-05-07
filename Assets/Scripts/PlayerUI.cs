@@ -160,7 +160,7 @@ public class PlayerUI : MonoBehaviour
     {
         int minute, second;
 
-        minute = Mathf.FloorToInt(input / 60);
+        minute = Mathf.FloorToInt((input+1) / 60);
 
         second = Mathf.CeilToInt(input) % 60;
 
