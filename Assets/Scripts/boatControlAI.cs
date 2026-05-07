@@ -566,519 +566,525 @@ public class boatControlAI : MonoBehaviour
 
     void Update()
     {
-        FindPois(); //keep at the top of Update
 
-
-        // ------ MOVEMENT ------
-
-
-        //Checks if there's any terrain between this ship and the targetPOI. If not, head straight for it. If so, generate pathfinding route (if not already present) and follow it
-        ray = new Ray(this.transform.position, poiInfos[targetPoi].globalPos - this.transform.position);
-        Debug.DrawRay(this.transform.position, ray.direction * Vector3.Distance(this.transform.position, poiInfos[targetPoi].globalPos), Color.yellow);
-
-        if (Physics.Raycast(ray, out rayHit, Vector3.Distance(this.transform.position, poiInfos[targetPoi].globalPos), terrainMask))
+        //Encapsulate the whole of Update
+        if (Time.timeScale != 0)
         {
-            if (!pathfinding)
-            {
-                GeneratePathingRoute();
-            }
-            else
-            {
-                //Use more rays to check if the route's starting position can still see this ship, and the ending position can still see the target
-                //If not, regenerate the route
-                //note: starting position and ending position should only be actual waypoints, not the positions of the ships themselves
-                if (Physics.Raycast(this.transform.position, (pathingWaypoints[pathingWaypoints.Count - 1] - this.transform.position).normalized,
-                                    out rayHit, Vector3.Distance(pathingWaypoints[pathingWaypoints.Count - 1], this.transform.position), terrainMask))
-                {
-                    GeneratePathingRoute();
-                }
-                else if (Physics.Raycast(poiInfos[targetPoi].globalPos, (pathingWaypoints[0] - poiInfos[targetPoi].globalPos).normalized,
-                                         out rayHit, Vector3.Distance(pathingWaypoints[0], poiInfos[targetPoi].globalPos), terrainMask))
-                {
-                    GeneratePathingRoute();
-                }
-            }
 
-            if (canReachTarget)
+            FindPois(); //keep at the top of Update
+
+
+            // ------ MOVEMENT ------
+
+
+            //Checks if there's any terrain between this ship and the targetPOI. If not, head straight for it. If so, generate pathfinding route (if not already present) and follow it
+            ray = new Ray(this.transform.position, poiInfos[targetPoi].globalPos - this.transform.position);
+            Debug.DrawRay(this.transform.position, ray.direction * Vector3.Distance(this.transform.position, poiInfos[targetPoi].globalPos), Color.yellow);
+
+            if (Physics.Raycast(ray, out rayHit, Vector3.Distance(this.transform.position, poiInfos[targetPoi].globalPos), terrainMask))
             {
-                //check all pathingWaypoints to see if the ship's within a certain zone
-                //if so, remove it and everything before it
-                for (int i = 0; i < pathingWaypoints.Count; i++)
+                if (!pathfinding)
                 {
-                    if (Vector3.Distance(this.transform.position, pathingWaypoints[i]) <= 20)
+                    GeneratePathingRoute();
+                }
+                else
+                {
+                    //Use more rays to check if the route's starting position can still see this ship, and the ending position can still see the target
+                    //If not, regenerate the route
+                    //note: starting position and ending position should only be actual waypoints, not the positions of the ships themselves
+                    if (Physics.Raycast(this.transform.position, (pathingWaypoints[pathingWaypoints.Count - 1] - this.transform.position).normalized,
+                                        out rayHit, Vector3.Distance(pathingWaypoints[pathingWaypoints.Count - 1], this.transform.position), terrainMask))
                     {
-                        while (pathingWaypoints.Count > i)
-                        {
-                            pathingWaypoints.RemoveAt(i);
-                        }
+                        GeneratePathingRoute();
+                    }
+                    else if (Physics.Raycast(poiInfos[targetPoi].globalPos, (pathingWaypoints[0] - poiInfos[targetPoi].globalPos).normalized,
+                                             out rayHit, Vector3.Distance(pathingWaypoints[0], poiInfos[targetPoi].globalPos), terrainMask))
+                    {
+                        GeneratePathingRoute();
                     }
                 }
 
-                if (pathingWaypoints.Count == 0)
+                if (canReachTarget)
                 {
-                    GeneratePathingRoute();
-                }
-            }
+                    //check all pathingWaypoints to see if the ship's within a certain zone
+                    //if so, remove it and everything before it
+                    for (int i = 0; i < pathingWaypoints.Count; i++)
+                    {
+                        if (Vector3.Distance(this.transform.position, pathingWaypoints[i]) <= 20)
+                        {
+                            while (pathingWaypoints.Count > i)
+                            {
+                                pathingWaypoints.RemoveAt(i);
+                            }
+                        }
+                    }
 
-            if (canReachTarget)
-            {
-                targetWaypoint = pathingWaypoints[pathingWaypoints.Count - 1];
-                pathfinding = true;
+                    if (pathingWaypoints.Count == 0)
+                    {
+                        GeneratePathingRoute();
+                    }
+                }
+
+                if (canReachTarget)
+                {
+                    targetWaypoint = pathingWaypoints[pathingWaypoints.Count - 1];
+                    pathfinding = true;
+                }
+                else
+                {
+                    targetWaypoint = poiInfos[targetPoi].globalPos;
+                    pathfinding = false;
+                }
+
             }
             else
             {
                 targetWaypoint = poiInfos[targetPoi].globalPos;
                 pathfinding = false;
+                canReachTarget = true;
             }
+            targetWaypointLocal = transform.InverseTransformPoint(targetWaypoint);
+            targetWaypointLocal.y = 0;
+            targetWaypointAngle = Vector3.SignedAngle(Vector3.forward, targetWaypointLocal, Vector3.up);
 
-        }
-        else
-        {
-            targetWaypoint = poiInfos[targetPoi].globalPos;
-            pathfinding = false;
-            canReachTarget = true;
-        }
-        targetWaypointLocal = transform.InverseTransformPoint(targetWaypoint);
-        targetWaypointLocal.y = 0;
-        targetWaypointAngle = Vector3.SignedAngle(Vector3.forward, targetWaypointLocal, Vector3.up);
-
-        if (!pathfinding && canReachTarget && bc.shipClass == boatCombat.Classes.Brigantine && (bc.specialCharged || bc.specialRunning) &&
-               (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
-                poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat))
-        {
-            canRam = true;
-        }
-        else
-        {
-            canRam = false;
-        }
-
-        //To prevent errors if the target is unreachable
-        if (canReachTarget)
-        {
-            //set stopAtTarget, depending on waypoint type
-            //stopAtTarget forced to false if pathfinding
-            if (!pathfinding && (poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectivePoint ||
-                poiInfos[targetPoi].poiType == PoiInfo.Types.DyingAlly ||
-                poiInfos[targetPoi].poiType == PoiInfo.Types.DyingEnemy))
+            if (!pathfinding && canReachTarget && bc.shipClass == boatCombat.Classes.Brigantine && (bc.specialCharged || bc.specialRunning) &&
+                   (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                    poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat))
             {
-                stopAtTarget = true;
+                canRam = true;
             }
             else
             {
-                stopAtTarget = false;
+                canRam = false;
             }
 
-            //sets aimingAtTargetPOI, depending on targetPOI type + distance, + this ship class
-            //aimingAtTargetPOI means the ship is positioning itself to fire upon its targetPOI
-            //Disabled when a brigantine is readying or using its special
-            if (!canRam && 
-               (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
-                poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
-                poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort))
+            //To prevent errors if the target is unreachable
+            if (canReachTarget)
             {
-                //Most ships aim their guns if within 30m, cutters get in further, then turn around
-
-                if (bc.shipClass == boatCombat.Classes.Cutter)
+                //set stopAtTarget, depending on waypoint type
+                //stopAtTarget forced to false if pathfinding
+                if (!pathfinding && (poiInfos[targetPoi].poiType == PoiInfo.Types.ObjectivePoint ||
+                    poiInfos[targetPoi].poiType == PoiInfo.Types.DyingAlly ||
+                    poiInfos[targetPoi].poiType == PoiInfo.Types.DyingEnemy))
                 {
-                    if (poiInfos[targetPoi].dist <= 20 || (Mathf.Abs(targetWaypointAngle) >= 90 && poiInfos[targetPoi].dist <= 30))
-                    {
-                        aimingAtTargetPoi = true;
-                    }
-                    else { aimingAtTargetPoi = false; }
+                    stopAtTarget = true;
                 }
                 else
                 {
-                    if (poiInfos[targetPoi].dist <= 30)
+                    stopAtTarget = false;
+                }
+
+                //sets aimingAtTargetPOI, depending on targetPOI type + distance, + this ship class
+                //aimingAtTargetPOI means the ship is positioning itself to fire upon its targetPOI
+                //Disabled when a brigantine is readying or using its special
+                if (!canRam &&
+                   (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                    poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
+                    poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort))
+                {
+                    //Most ships aim their guns if within 30m, cutters get in further, then turn around
+
+                    if (bc.shipClass == boatCombat.Classes.Cutter)
                     {
-                        aimingAtTargetPoi = true;
-                    }
-                    else { aimingAtTargetPoi = false; }
-                }
-            }
-            else
-            {
-                aimingAtTargetPoi = false;
-            }
-
-            //Sorts out movement and steering - acts differently depending on aimingAtTargetPOI
-
-            if (canRam && bc.specialRunning)
-            {
-                //Specifically for when a brigantine is currently ramming
-                //leads its "shot"
-
-                //gets the ratio between this this ship's forward speed and the target's speed relative to this ship's forward direction
-                targetWaypointVelLocal = transform.InverseTransformDirection(poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity);
-                if (targetWaypointVelLocal.z > 0) { targetWaypointVelLocal.z = 0; }
-                zSpeedRatio = (bc.bm.outSpd - targetWaypointVelLocal.z) / bc.bm.outSpd;
-
-
-                targetWaypointLead = targetWaypoint +
-                    (poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity * zSpeedRatio *
-                    (poiInfos[targetPoi].localPos.magnitude / (bc.speed * bc.bm.chargeSpeedMult)));
-
-                targetWaypointLeadLocal = transform.InverseTransformPoint(targetWaypointLead);
-                targetWaypointLeadLocal.y = 0;
-                targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward, targetWaypointLeadLocal, Vector3.up);
-
-
-                steerIn = RotateBoat(targetWaypointAngleAiming);
-                if (Mathf.Abs(targetWaypointAngleAiming) > 45)
-                {
-                    moveIn = 0;
-                }
-                else
-                {
-                    moveIn = 1;
-                }
-
-                Debug.DrawLine(targetWaypointLead, targetWaypointLead + (Vector3.up * 9999), Color.green, 0);
-            }
-            else if (!aimingAtTargetPoi || pathfinding)
-            {
-                //NOT aimingAtTargetPOI - paths directly towards its target waypoint
-                //Also happens when pathfinding
-
-                //point towards target waypoint
-                //Doesnt bother if stopAtTarget is enabled AND the target is close enough
-                if (!(stopAtTarget && poiInfos[targetPoi].dist < 20))
-                {
-                    //when targeting enemy ships, offset their rotation a little bit, to enter a better orbit around their target
-                    //only does so when not pathfinding or ramming
-
-                    if (!pathfinding && !canRam &&
-                        (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
-                         poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat) &&
-                         poiInfos[targetPoi].dist > targetWaypointAimCircleRadius && poiInfos[targetPoi].dist <= 100)
-                    {
-                        if (targetWaypointAngle < 0)
+                        if (poiInfos[targetPoi].dist <= 20 || (Mathf.Abs(targetWaypointAngle) >= 90 && poiInfos[targetPoi].dist <= 30))
                         {
-                            targetWaypointAngleCircleAdj = Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                            aimingAtTargetPoi = true;
+                        }
+                        else { aimingAtTargetPoi = false; }
+                    }
+                    else
+                    {
+                        if (poiInfos[targetPoi].dist <= 30)
+                        {
+                            aimingAtTargetPoi = true;
+                        }
+                        else { aimingAtTargetPoi = false; }
+                    }
+                }
+                else
+                {
+                    aimingAtTargetPoi = false;
+                }
+
+                //Sorts out movement and steering - acts differently depending on aimingAtTargetPOI
+
+                if (canRam && bc.specialRunning)
+                {
+                    //Specifically for when a brigantine is currently ramming
+                    //leads its "shot"
+
+                    //gets the ratio between this this ship's forward speed and the target's speed relative to this ship's forward direction
+                    targetWaypointVelLocal = transform.InverseTransformDirection(poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity);
+                    if (targetWaypointVelLocal.z > 0) { targetWaypointVelLocal.z = 0; }
+                    zSpeedRatio = (bc.bm.outSpd - targetWaypointVelLocal.z) / bc.bm.outSpd;
+
+
+                    targetWaypointLead = targetWaypoint +
+                        (poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity * zSpeedRatio *
+                        (poiInfos[targetPoi].localPos.magnitude / (bc.speed * bc.bm.chargeSpeedMult)));
+
+                    targetWaypointLeadLocal = transform.InverseTransformPoint(targetWaypointLead);
+                    targetWaypointLeadLocal.y = 0;
+                    targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward, targetWaypointLeadLocal, Vector3.up);
+
+
+                    steerIn = RotateBoat(targetWaypointAngleAiming);
+                    if (Mathf.Abs(targetWaypointAngleAiming) > 45)
+                    {
+                        moveIn = 0;
+                    }
+                    else
+                    {
+                        moveIn = 1;
+                    }
+
+                    Debug.DrawLine(targetWaypointLead, targetWaypointLead + (Vector3.up * 9999), Color.green, 0);
+                }
+                else if (!aimingAtTargetPoi || pathfinding)
+                {
+                    //NOT aimingAtTargetPOI - paths directly towards its target waypoint
+                    //Also happens when pathfinding
+
+                    //point towards target waypoint
+                    //Doesnt bother if stopAtTarget is enabled AND the target is close enough
+                    if (!(stopAtTarget && poiInfos[targetPoi].dist < 20))
+                    {
+                        //when targeting enemy ships, offset their rotation a little bit, to enter a better orbit around their target
+                        //only does so when not pathfinding or ramming
+
+                        if (!pathfinding && !canRam &&
+                            (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                             poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat) &&
+                             poiInfos[targetPoi].dist > targetWaypointAimCircleRadius && poiInfos[targetPoi].dist <= 100)
+                        {
+                            if (targetWaypointAngle < 0)
+                            {
+                                targetWaypointAngleCircleAdj = Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                            }
+                            else
+                            {
+                                targetWaypointAngleCircleAdj = -1 * Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                            }
                         }
                         else
                         {
-                            targetWaypointAngleCircleAdj = -1 * Mathf.Rad2Deg * Mathf.Asin(targetWaypointAimCircleRadius / poiInfos[targetPoi].dist);
+                            targetWaypointAngleCircleAdj = 0;
                         }
+                        steerIn = RotateBoat(targetWaypointAngle + targetWaypointAngleCircleAdj);
                     }
                     else
                     {
                         targetWaypointAngleCircleAdj = 0;
+                        steerIn = 0;
                     }
-                    steerIn = RotateBoat(targetWaypointAngle + targetWaypointAngleCircleAdj);
-                }
-                else
-                {
-                    targetWaypointAngleCircleAdj = 0;
-                    steerIn = 0;
-                }
 
-                //set moveIn
-                //sets to 0 if the target is >45deg away OR
-                //(stopAtTarget enabled AND EITHER the target is close enough, OR its moving fast enough to reach the target just by coasting)
-                if (stopAtTarget && (poiInfos[targetPoi].dist < 20 || (bm.outSpd / bm.rb.linearDamping >= poiInfos[targetPoi].dist)))
-                {
-                    stoppingAtTarget = true;
-                }
-                else
-                {
-                    stoppingAtTarget = false;
-                }
-
-                if (Mathf.Abs(targetWaypointAngle + targetWaypointAngleCircleAdj) > 45 || stoppingAtTarget)
-                {
-                    moveIn = 0;
-
-                    //If stopping at its targetPOI, can freely point its guns towards the nearest shootable POI
-                    if (stoppingAtTarget)
+                    //set moveIn
+                    //sets to 0 if the target is >45deg away OR
+                    //(stopAtTarget enabled AND EITHER the target is close enough, OR its moving fast enough to reach the target just by coasting)
+                    if (stopAtTarget && (poiInfos[targetPoi].dist < 20 || (bm.outSpd / bm.rb.linearDamping >= poiInfos[targetPoi].dist)))
                     {
-                        AimCannonsAtShootable();
+                        stoppingAtTarget = true;
+                    }
+                    else
+                    {
+                        stoppingAtTarget = false;
+                    }
+
+                    if (Mathf.Abs(targetWaypointAngle + targetWaypointAngleCircleAdj) > 45 || stoppingAtTarget)
+                    {
+                        moveIn = 0;
+
+                        //If stopping at its targetPOI, can freely point its guns towards the nearest shootable POI
+                        if (stoppingAtTarget)
+                        {
+                            AimCannonsAtShootable();
+                        }
+                    }
+                    else
+                    {
+                        moveIn = 1;
                     }
                 }
                 else
                 {
+                    //aimingAtTargetPOI - max moveIn, rotates its closest cannons towards the target waypoint
+
+                    //point guns towards target waypoint - uses targetWaypointAngleAiming to do so
+                    if (bc.shipClass == boatCombat.Classes.Cutter)
+                    {
+                        //this is to combat an issue where cutters will approach a target sideways, steer the wrong way and slam into their target
+
+                        targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
+
+                        float moveDirToTarget = Vector3.SignedAngle(bm.localMoveDir * -1, targetWaypointLocal, Vector3.up);
+                        float angleToMoveDir = Vector3.SignedAngle(Vector3.forward * -1, bm.localMoveDir * -1, Vector3.up);
+
+                        if ((moveDirToTarget >= 90 || moveDirToTarget <= -90) &&
+                            ((moveDirToTarget < 0 && targetWaypointAngleAiming > 0) ||
+                            (moveDirToTarget > 0 && targetWaypointAngleAiming < 0)))
+                        {
+                            steerIn = RotateBoat(angleToMoveDir);
+                        }
+                        else
+                        {
+                            steerIn = RotateBoat(targetWaypointAngleAiming);
+                        }
+                    }
+                    else
+                    {
+                        //If target is dead ahead or too close, steer away
+                        if (Mathf.Abs(targetWaypointAngle) < 15 || poiInfos[targetPoi].dist < 10)
+                        {
+                            targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
+                            steerIn = RotateBoat(targetWaypointAngleAiming);
+                        }
+                        //Else, only bother steering if you've passed the target
+                        else if (Mathf.Abs(targetWaypointAngle) <= 90)
+                        {
+                            steerIn = 0;
+                        }
+                        else
+                        {
+                            //figures out if the left or right broadside is closer, then aims it towards the target
+                            if (targetWaypointAngle < 0)
+                            {
+                                targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right * -1, targetWaypointLocal, Vector3.up);
+                            }
+                            else
+                            {
+                                targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right, targetWaypointLocal, Vector3.up);
+                            }
+                            steerIn = RotateBoat(targetWaypointAngleAiming);
+                        }
+                    }
+
                     moveIn = 1;
                 }
             }
             else
             {
-                //aimingAtTargetPOI - max moveIn, rotates its closest cannons towards the target waypoint
+                moveIn = 0;
+                AimCannonsAtShootable();
+            }
 
-                //point guns towards target waypoint - uses targetWaypointAngleAiming to do so
-                if (bc.shipClass == boatCombat.Classes.Cutter)
-                {
-                    //this is to combat an issue where cutters will approach a target sideways, steer the wrong way and slam into their target
+            //Can't move if aiming mortar
+            if (bc.aimingMortar)
+            {
+                moveIn = 0;
+                steerIn = 0;
+            }
 
-                    targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
+            bm.SetMovementIn(moveIn);
+            bm.SetRotationIn(steerIn);
 
-                    float moveDirToTarget = Vector3.SignedAngle(bm.localMoveDir * -1, targetWaypointLocal, Vector3.up);
-                    float angleToMoveDir = Vector3.SignedAngle(Vector3.forward * -1, bm.localMoveDir * -1, Vector3.up);
 
-                    if ((moveDirToTarget >= 90 || moveDirToTarget <= -90) &&
-                        ((moveDirToTarget < 0 && targetWaypointAngleAiming > 0) ||
-                        (moveDirToTarget > 0 && targetWaypointAngleAiming < 0)))
+            // ------ SHOOTING ------
+
+
+            //Special usage happens before normal shooting
+            switch (bc.shipClass)
+            {
+                case boatCombat.Classes.Cutter:
+
+                    if (poiInfos[targetPoi].dist <= 25 && poiInfos[targetPoi].dist >= 8 &&
+                        (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                        poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat))
                     {
-                        steerIn = RotateBoat(angleToMoveDir);
+                        targetToThisLocal = poiObjects[targetPoi].transform.InverseTransformPoint(this.transform.position);
+                        targetToThisLocal.y = 0;
+                        targetToThisAngle = Mathf.Abs(Vector3.SignedAngle(Vector3.forward, targetToThisLocal, Vector3.up));
+                        //bc.UseSpecial();
+                    }
+                    else if (anythingToShoot && poiInfos[shootablePoi].dist <= 25 && poiInfos[targetPoi].dist >= 8 &&
+                        (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                        poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat))
+                    {
+                        targetToThisLocal = poiObjects[shootablePoi].transform.InverseTransformPoint(this.transform.position);
+                        targetToThisLocal.y = 0;
+                        targetToThisAngle = Mathf.Abs(Vector3.SignedAngle(Vector3.forward, targetToThisLocal, Vector3.up));
+                        //bc.UseSpecial();
                     }
                     else
                     {
-                        steerIn = RotateBoat(targetWaypointAngleAiming);
+                        targetToThisLocal = Vector3.zero;
+                        targetToThisAngle = 9999;
                     }
+
+                    if (targetToThisAngle <= 10)
+                    {
+                        bc.UseSpecial();
+                    }
+                    break;
+
+                case boatCombat.Classes.Brigantine:
+
+                    if (poiInfos[targetPoi].dist <= 50 && Mathf.Abs(targetWaypointAngle) <= 10 && canRam)
+                    {
+                        bc.UseSpecial();
+                    }
+                    break;
+
+                case boatCombat.Classes.Frigate:
+
+                    if (poiInfos[targetPoi].dist >= 40 && poiInfos[targetPoi].dist <= poiRadius && bc.specialCharged &&
+                        (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                        poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
+                        poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort))
+                    {
+                        bc.aimingMortar = true;
+                        mortarAimingAtShootable = false;
+                    }
+                    else if (anythingToShoot && poiInfos[shootablePoi].dist >= 40 && poiInfos[shootablePoi].dist <= poiRadius && bc.specialCharged &&
+                        (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                        poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat ||
+                        poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyFort))
+                    {
+                        bc.aimingMortar = true;
+                        mortarAimingAtShootable = true;
+                    }
+
+                    break;
+
+                case boatCombat.Classes.Galleon:
+
+                    if (goodAnglePois >= 2)
+                    {
+                        bc.UseSpecial();
+                    }
+                    break;
+            }
+
+            if (bc.aimingMortar)
+            {
+                isAiming = false;
+                timeAiming = 0;
+                reticle.transform.localPosition = Vector3.zero;
+                bc.aimPos = Vector2.zero;
+
+                if (aimingMortarStart)
+                {
+                    if (!mortarAimingAtShootable)
+                    {
+                        mortarWaypoint = poiInfos[targetPoi].globalPos;
+                        mortarWaypointVel = poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity;
+                    }
+                    else
+                    {
+                        mortarWaypoint = poiInfos[shootablePoi].globalPos;
+                        mortarWaypointVel = poiObjects[shootablePoi].GetComponent<Rigidbody>().linearVelocity;
+                    }
+                    mortarWaypoint += mortarWaypointVel * (mortarAimDelay + bc.mortarDelay);
                 }
-                else
+
+                mortarWaypointLocal = transform.InverseTransformPoint(mortarWaypoint);
+
+                timeMortarAiming += Time.deltaTime;
+                if (timeMortarAiming > mortarAimDelay)
                 {
-                    //If target is dead ahead or too close, steer away
-                    if (Mathf.Abs(targetWaypointAngle) < 15 || poiInfos[targetPoi].dist < 10)
+                    timeMortarAiming = mortarAimDelay;
+                }
+                bc.mortarAimPos.x = mortarWaypointLocal.x * MortarMathEquation(timeMortarAiming / mortarAimDelay);
+                bc.mortarAimPos.y = mortarWaypointLocal.z * MortarMathEquation(timeMortarAiming / mortarAimDelay);
+                bc.MoveMortarOutline();
+
+                if (timeMortarAiming >= mortarAimDelay)
+                {
+                    bc.UseSpecial();
+                    bc.aimingMortar = false;
+                    bc.MoveMortarOutline();
+                }
+
+                aimingMortarStart = false;
+            }
+            else
+            {
+                aimingMortarStart = true;
+                timeMortarAiming = 0;
+                bc.mortarAimPos = Vector2.zero;
+                mortarWaypoint = transform.position;
+                mortarWaypointVel = Vector3.zero;
+
+                // If not already aiming, Gets the global position and velocity of its target
+                if (!isAiming)
+                {
+                    if (anythingToShoot)
                     {
-                        targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.forward * -1, targetWaypointLocal, Vector3.up);
-                        steerIn = RotateBoat(targetWaypointAngleAiming);
-                    }
-                    //Else, only bother steering if you've passed the target
-                    else if (Mathf.Abs(targetWaypointAngle) <= 90)
-                    {
-                        steerIn = 0;
-                    }
-                    else
-                    {
-                        //figures out if the left or right broadside is closer, then aims it towards the target
-                        if (targetWaypointAngle < 0)
+                        shootableWaypoint = poiInfos[shootablePoi].globalPos;
+
+                        if (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
+                            poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat)
                         {
-                            targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right * -1, targetWaypointLocal, Vector3.up);
+                            shootableWaypointVel = poiObjects[shootablePoi].GetComponent<Rigidbody>().linearVelocity;
                         }
                         else
                         {
-                            targetWaypointAngleAiming = Vector3.SignedAngle(Vector3.right, targetWaypointLocal, Vector3.up);
+                            shootableWaypointVel = Vector3.zero;
                         }
-                        steerIn = RotateBoat(targetWaypointAngleAiming);
-                    }
-                }
-
-                moveIn = 1;
-            }
-        }
-        else
-        {
-            moveIn = 0;
-            AimCannonsAtShootable();
-        }
-
-        //Can't move if aiming mortar
-        if (bc.aimingMortar)
-        {
-            moveIn = 0;
-            steerIn = 0;
-        }
-
-        bm.SetMovementIn(moveIn);
-        bm.SetRotationIn(steerIn);
-
-
-        // ------ SHOOTING ------
-
-
-        //Special usage happens before normal shooting
-        switch (bc.shipClass)
-        {
-            case boatCombat.Classes.Cutter:
-
-                if (poiInfos[targetPoi].dist <= 25 && poiInfos[targetPoi].dist >= 8 && 
-                    (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
-                    poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat))
-                {
-                    targetToThisLocal = poiObjects[targetPoi].transform.InverseTransformPoint(this.transform.position);
-                    targetToThisLocal.y = 0;
-                    targetToThisAngle = Mathf.Abs(Vector3.SignedAngle(Vector3.forward, targetToThisLocal, Vector3.up));
-                    //bc.UseSpecial();
-                }
-                else if (anythingToShoot && poiInfos[shootablePoi].dist <= 25 && poiInfos[targetPoi].dist >= 8 &&
-                    (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
-                    poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat))
-                {
-                    targetToThisLocal = poiObjects[shootablePoi].transform.InverseTransformPoint(this.transform.position);
-                    targetToThisLocal.y = 0;
-                    targetToThisAngle = Mathf.Abs(Vector3.SignedAngle(Vector3.forward, targetToThisLocal, Vector3.up));
-                    //bc.UseSpecial();
-                }
-                else
-                {
-                    targetToThisLocal = Vector3.zero;
-                    targetToThisAngle = 9999;
-                }
-
-                if (targetToThisAngle <= 10)
-                {
-                    bc.UseSpecial();
-                }
-                break;
-
-            case boatCombat.Classes.Brigantine:
-
-                if (poiInfos[targetPoi].dist <= 50 && Mathf.Abs(targetWaypointAngle) <= 10 && canRam)
-                {
-                    bc.UseSpecial();
-                }
-                break;
-
-            case boatCombat.Classes.Frigate:
-
-                if (poiInfos[targetPoi].dist >= 40 && poiInfos[targetPoi].dist <= poiRadius && bc.specialCharged && 
-                    (poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
-                    poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyBoat ||
-                    poiInfos[targetPoi].poiType == PoiInfo.Types.EnemyFort))
-                {
-                    bc.aimingMortar = true;
-                    mortarAimingAtShootable = false;
-                }
-                else if (anythingToShoot && poiInfos[shootablePoi].dist >= 40 && poiInfos[shootablePoi].dist <= poiRadius && bc.specialCharged &&
-                    (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
-                    poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat ||
-                    poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyFort))
-                {
-                    bc.aimingMortar = true;
-                    mortarAimingAtShootable = true;
-                }
-
-                break;
-
-            case boatCombat.Classes.Galleon:
-
-                if (goodAnglePois >= 2)
-                {
-                    bc.UseSpecial();
-                }
-                break;
-        }
-
-        if (bc.aimingMortar)
-        {
-            isAiming = false;
-            timeAiming = 0;
-            reticle.transform.localPosition = Vector3.zero;
-            bc.aimPos = Vector2.zero;
-
-            if (aimingMortarStart)
-            {
-                if (!mortarAimingAtShootable)
-                {
-                    mortarWaypoint = poiInfos[targetPoi].globalPos;
-                    mortarWaypointVel = poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity;
-                }
-                else
-                {
-                    mortarWaypoint = poiInfos[shootablePoi].globalPos;
-                    mortarWaypointVel = poiObjects[shootablePoi].GetComponent<Rigidbody>().linearVelocity;
-                }
-                mortarWaypoint += mortarWaypointVel * (mortarAimDelay + bc.mortarDelay);
-            }
-
-            mortarWaypointLocal = transform.InverseTransformPoint(mortarWaypoint);
-
-            timeMortarAiming += Time.deltaTime;
-            if (timeMortarAiming > mortarAimDelay)
-            {
-                timeMortarAiming = mortarAimDelay;
-            }
-            bc.mortarAimPos.x = mortarWaypointLocal.x * MortarMathEquation(timeMortarAiming / mortarAimDelay);
-            bc.mortarAimPos.y = mortarWaypointLocal.z * MortarMathEquation(timeMortarAiming / mortarAimDelay);
-            bc.MoveMortarOutline();
-
-            if (timeMortarAiming >= mortarAimDelay)
-            {
-                bc.UseSpecial();
-                bc.aimingMortar = false;
-                bc.MoveMortarOutline();
-            }
-
-            aimingMortarStart = false;
-        }
-        else
-        {
-            aimingMortarStart = true;
-            timeMortarAiming = 0;
-            bc.mortarAimPos = Vector2.zero;
-            mortarWaypoint = transform.position;
-            mortarWaypointVel = Vector3.zero;
-
-            // If not already aiming, Gets the global position and velocity of its target
-            if (!isAiming)
-            {
-                if (anythingToShoot)
-                {
-                    shootableWaypoint = poiInfos[shootablePoi].globalPos;
-
-                    if (poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyObjectiveBoat ||
-                        poiInfos[shootablePoi].poiType == PoiInfo.Types.EnemyBoat)
-                    {
-                        shootableWaypointVel = poiObjects[shootablePoi].GetComponent<Rigidbody>().linearVelocity;
                     }
                     else
                     {
+                        shootableWaypoint = transform.position;
                         shootableWaypointVel = Vector3.zero;
                     }
+
+                    reticle.transform.position = shootableWaypoint;
+                }
+
+                //If it is aiming, use previously found target position/velocity, and timeAiming, to estimate its current position
+                else
+                {
+                    reticle.transform.position = shootableWaypoint + (shootableWaypointVel * timeAiming);
+                }
+
+                //Gets the position it's currently aiming at, finds its distance, and uses it to lead its shot
+                reticle.transform.position += shootableWaypointVel * (reticle.transform.localPosition.magnitude / cannonballSpeed);
+
+                //Finds the distance between the reticle and the relevant cannons, to check if its in range
+                //if (reticle.transform.localPosition.x >= 0 || bc.shipClass == boatCombat.Classes.Cutter)
+                //{
+                //    shootableCannonCentreDist = Vector3.Distance(cannonCentreR, reticle.transform.localPosition);
+                //}
+                //else
+                //{
+                //    shootableCannonCentreDist = Vector3.Distance(cannonCentreL, reticle.transform.localPosition);
+                //}
+                shootableCannonCentreDist = FindCannonCentreDist(reticle.transform.localPosition);
+
+                if (shootableCannonCentreDist > 30.5f)
+                {
+                    reticle.transform.localPosition = Vector3.zero;
+                }
+
+                //updates aimPos in boatCombat
+                bc.aimPos.x = reticle.transform.localPosition.x;
+                bc.aimPos.y = reticle.transform.localPosition.z;
+
+                //if aiming is valid, set isAiming to true. Also stays true, as long as volleying is > 0
+                if ((shootableCannonCentreDist <= 30.5f && bc.reloadProgress == 100) || (bc.volleying > 0 && isAiming))
+                {
+                    if (timeAiming >= shootDelay)
+                    {
+                        bc.Shoot();
+                    }
+
+                    timeAiming += Time.deltaTime;
+                    isAiming = true;
                 }
                 else
                 {
-                    shootableWaypoint = transform.position;
-                    shootableWaypointVel = Vector3.zero;
+                    //when aiming stops being valid, if volleying == 0, fire off one last shot
+                    //if (bc.volleying == 0 && isAiming)
+                    //{
+                    //    bc.Shoot();
+                    //}
+
+                    timeAiming = 0;
+                    isAiming = false;
                 }
 
-                reticle.transform.position = shootableWaypoint;
+                //reticleCircle.value = bc.reloadProgress;
+                //reticle.transform.rotation = bc.rMan.playerReticleRotation;
             }
-
-            //If it is aiming, use previously found target position/velocity, and timeAiming, to estimate its current position
-            else
-            {
-                reticle.transform.position = shootableWaypoint + (shootableWaypointVel * timeAiming);
-            }
-
-            //Gets the position it's currently aiming at, finds its distance, and uses it to lead its shot
-            reticle.transform.position += shootableWaypointVel * (reticle.transform.localPosition.magnitude / cannonballSpeed);
-
-            //Finds the distance between the reticle and the relevant cannons, to check if its in range
-            //if (reticle.transform.localPosition.x >= 0 || bc.shipClass == boatCombat.Classes.Cutter)
-            //{
-            //    shootableCannonCentreDist = Vector3.Distance(cannonCentreR, reticle.transform.localPosition);
-            //}
-            //else
-            //{
-            //    shootableCannonCentreDist = Vector3.Distance(cannonCentreL, reticle.transform.localPosition);
-            //}
-            shootableCannonCentreDist = FindCannonCentreDist(reticle.transform.localPosition);
-
-            if (shootableCannonCentreDist > 30.5f)
-            {
-                reticle.transform.localPosition = Vector3.zero;
-            }
-
-            //updates aimPos in boatCombat
-            bc.aimPos.x = reticle.transform.localPosition.x;
-            bc.aimPos.y = reticle.transform.localPosition.z;
-
-            //if aiming is valid, set isAiming to true. Also stays true, as long as volleying is > 0
-            if ((shootableCannonCentreDist <= 30.5f && bc.reloadProgress == 100) || (bc.volleying > 0 && isAiming))
-            {
-                if (timeAiming >= shootDelay)
-                {
-                    bc.Shoot();
-                }
-
-                timeAiming += Time.deltaTime;
-                isAiming = true;
-            }
-            else
-            {
-                //when aiming stops being valid, if volleying == 0, fire off one last shot
-                //if (bc.volleying == 0 && isAiming)
-                //{
-                //    bc.Shoot();
-                //}
-
-                timeAiming = 0;
-                isAiming = false;
-            }
-
-            //reticleCircle.value = bc.reloadProgress;
-            //reticle.transform.rotation = bc.rMan.playerReticleRotation;
         }
     }
     void LateUpdate()

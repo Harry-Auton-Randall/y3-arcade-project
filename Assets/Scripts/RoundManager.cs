@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 public class RoundManager : MonoBehaviour
 {
+    int mapId;
+    string mapName;
+
     public bool PlayerCheatButton;
     GameObject startCanvas;
     Text startTitle, startDesc;
@@ -253,10 +256,14 @@ public class RoundManager : MonoBehaviour
 
     public void StartGame(int startingClass)
     {
-        Debug.Log("Button " + startingClass + " pressed");
+        //Debug.Log("Button " + startingClass + " pressed");
         ChangeClass(0, startingClass);
 
         startCanvas.SetActive(false);
+        if (player)
+        {
+            transform.Find("RoundBeginCamera").GetComponent<Camera>().enabled = false;
+        }
 
         if (teams)
         {
@@ -365,14 +372,28 @@ public class RoundManager : MonoBehaviour
 
         if (winner == 0)
         {
-            Debug.Log("YOU WIN");
+            //Debug.Log("YOU WIN");
+            GetComponent<RoundManagerMenus>().PauseGameWin(mapId);
         }
         else
         {
-            Debug.Log(shipStatuses[winner].name + " won, you did not.");
+            //Debug.Log(shipStatuses[winner].name + " won, you did not.");
+            GetComponent<RoundManagerMenus>().PauseGameLoss(PositionGetter(0), shipStatuses[scoresSorted[0]].name);
         }
-        Time.timeScale = 0;
+        
         gameEnded = true;
+    }
+    int PositionGetter(int id)
+    {
+        for (int i=0;i<scoresSorted.Length;i++)
+        {
+            if (scoresSorted[i] == id) 
+            { 
+                return i;
+                //break; 
+            }
+        }
+        return -1;
     }
 
     void SpawnShip(int id, Transform spawnPos, bool respawning)

@@ -104,45 +104,47 @@ public class PlayerUI : MonoBehaviour
     {
         string str;
 
-        int idP = id+1;
-        switch (idP)
-        {
-            case 1:
-                str = "1st: ";
-                break;
-            case 2:
-                str = "2nd: ";
-                break;
-            case 3:
-                str = "3rd: ";
-                break;
-            default:
-                if (idP >= 21)
-                {
-                    if (idP % 10 == 1)
-                    {
-                        str = (idP + "st: ");
-                    }
-                    else if (idP % 10 == 2)
-                    {
-                        str = (idP + "nd: ");
-                    }
-                    else if (idP % 10 == 3)
-                    {
-                        str = (idP + "rd: ");
-                    }
-                    else
-                    {
-                        str = (idP + "th: ");
-                    }
-                }
-                else
-                {
-                    str = (idP + "th: ");
-                }
-                break;
+        //int idP = id+1;
+        //switch (idP)
+        //{
+        //    case 1:
+        //        str = "1st: ";
+        //        break;
+        //    case 2:
+        //        str = "2nd: ";
+        //        break;
+        //    case 3:
+        //        str = "3rd: ";
+        //        break;
+        //    default:
+        //        if (idP >= 21)
+        //        {
+        //            if (idP % 10 == 1)
+        //            {
+        //                str = (idP + "st: ");
+        //            }
+        //            else if (idP % 10 == 2)
+        //            {
+        //                str = (idP + "nd: ");
+        //            }
+        //            else if (idP % 10 == 3)
+        //            {
+        //                str = (idP + "rd: ");
+        //            }
+        //            else
+        //            {
+        //                str = (idP + "th: ");
+        //            }
+        //        }
+        //        else
+        //        {
+        //            str = (idP + "th: ");
+        //        }
+        //        break;
 
-        }
+        //}
+
+        str = (RoundManagerMenus.NumberthFormat(id + 1) + ": ");
 
         str += bc.rMan.shipStatuses[bc.rMan.scoresSorted[id]].name;
 

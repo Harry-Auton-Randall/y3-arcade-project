@@ -454,6 +454,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "PauseUnpause",
+                    "type": "Button",
+                    "id": "61fa5c61-cf14-452b-93c8-40064c79b09d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -465,6 +474,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "ShowScores",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "dc622cf7-df41-4c3e-a604-10a51b4e08fd",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "PauseUnpause",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
