@@ -60,7 +60,10 @@ public class Mine : MonoBehaviour
                 Destroy(this.gameObject);
             }
         }
+    }
 
+    void FixedUpdate()
+    {
         //copied from boatMove
         totalPushForce = Vector3.zero;
         for (int i = 0; i < pushingZones.Count; i++)
