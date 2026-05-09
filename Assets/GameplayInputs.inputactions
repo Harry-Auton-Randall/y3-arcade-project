@@ -463,6 +463,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "AutoWin",
+                    "type": "Value",
+                    "id": "94603853-7280-4ad4-aab7-30a302253e17",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -485,6 +494,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "PauseUnpause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3ad396b3-61b8-49f7-9965-df293095204d",
+                    "path": "<Keyboard>/p",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AutoWin",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
