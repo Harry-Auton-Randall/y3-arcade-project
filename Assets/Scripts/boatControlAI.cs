@@ -714,9 +714,16 @@ public class boatControlAI : MonoBehaviour
                     //leads its "shot"
 
                     //gets the ratio between this this ship's forward speed and the target's speed relative to this ship's forward direction
-                    targetWaypointVelLocal = transform.InverseTransformDirection(poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity);
-                    if (targetWaypointVelLocal.z > 0) { targetWaypointVelLocal.z = 0; }
-                    zSpeedRatio = (bc.bm.outSpd - targetWaypointVelLocal.z) / bc.bm.outSpd;
+                    if (bc.bm.outSpd <= 0)
+                    {
+                        zSpeedRatio = 0;
+                    }
+                    else
+                    {
+                        targetWaypointVelLocal = -1 * (transform.InverseTransformDirection(poiObjects[targetPoi].GetComponent<Rigidbody>().linearVelocity));
+                        if (targetWaypointVelLocal.z < 0) { targetWaypointVelLocal.z = 0; }
+                        zSpeedRatio = bc.bm.outSpd / (bc.bm.outSpd + targetWaypointVelLocal.z);
+                    }
 
 
                     targetWaypointLead = targetWaypoint +
