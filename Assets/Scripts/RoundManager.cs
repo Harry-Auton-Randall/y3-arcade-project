@@ -10,7 +10,7 @@ public class RoundManager : MonoBehaviour
 
     public GameObject dataPasser;
 
-    public bool PlayerCheatButton;
+    public bool PlayerCheatButton; //Causes the player to instantly win, for demo-ing progression on victory because I suck at my own game
     GameObject startCanvas;
     Text startTitle, startDesc;
 
@@ -418,6 +418,10 @@ public class RoundManager : MonoBehaviour
             if (PlayerCheatButton)
             {
                 shipStatuses[0].score = 999;
+                if (!scoreOrTime)
+                {
+                    timeLeft = 0;
+                }
                 PlayerCheatButton = false;
             }
 

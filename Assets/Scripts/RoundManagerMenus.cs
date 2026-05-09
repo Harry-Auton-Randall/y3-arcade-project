@@ -14,7 +14,8 @@ public class RoundManagerMenus : MonoBehaviour
     Text pauseTitleText, pauseExtraText;
 
     InputActionMap menuActions;
-    InputAction showScoresA, pauseA;
+    InputAction showScoresA, pauseA, autoWinA;
+    float autoWinTimer;
 
     int index;
 
@@ -36,6 +37,7 @@ public class RoundManagerMenus : MonoBehaviour
         menuActions = InputSystem.actions.FindActionMap("Menus");
         showScoresA = menuActions.FindAction("ShowScores");
         pauseA = menuActions.FindAction("PauseUnpause");
+        autoWinA = menuActions.FindAction("AutoWin");
         pauseOpen = false;
     }
     void Start()
@@ -133,6 +135,7 @@ public class RoundManagerMenus : MonoBehaviour
 
     void Update()
     {
+        //switch panel
         if(!rMan.gameStarted)
         {
             scoreboardPanel.SetActive(false);
@@ -156,6 +159,20 @@ public class RoundManagerMenus : MonoBehaviour
             scoreboardPanel.SetActive(false);
             pausePanel.SetActive(false);
             menusOpen = false;
+        }
+
+        //Check progress of autoWin button
+        if (autoWinA.IsPressed())
+        {
+            autoWinTimer += Time.deltaTime;
+        }
+        else
+        {
+            autoWinTimer = 0;
+        }
+        if (autoWinTimer >= 5)
+        {
+            rMan.PlayerCheatButton = true;
         }
     }
 
